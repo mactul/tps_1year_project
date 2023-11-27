@@ -1,3 +1,4 @@
+.vscode
 download/*
 !download/training_set/
 download/training_set/*
