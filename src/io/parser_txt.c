@@ -22,7 +22,7 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
     Rating rating;
     uint16_t year;
     
-    while (fscanf(file, "%" PRIu32 ",%" PRIu8 ",%" PRIu16 "-%" PRIu8 "-%" PRIu8, &(rating.user_id), &(rating.note), &year, &(rating.month), &(rating.day)) != EOF)
+    while (fscanf(file, "%" SCNu32 ",%" SCNu8 ",%" SCNu16 "-%" SCNu8 "-%" SCNu8, &(rating.user_id), &(rating.note), &year, &(rating.month), &(rating.day)) != EOF)
     {
         rating.offseted_year = year - YEARS_OFFSET;
         SA_dynarray_append(Rating, ratings, rating);
