@@ -1,3 +1,6 @@
+#ifndef DATA_STRUCTS_H
+#define DATA_STRUCTS_H
+
 #include <SA/memory/dynamic_array.h>
 
 #define YEARS_OFFSET 1970
@@ -9,10 +12,12 @@ typedef struct _film {
     SA_DynamicArray* ratings;
 } Film;
 
-typedef struct _ratings {
+typedef struct _rating {
     uint32_t user_id;
     uint8_t note;
     uint8_t day;
     uint8_t month;
     uint8_t offseted_year;
-} Ratings;
+} Rating;
+
+#endif

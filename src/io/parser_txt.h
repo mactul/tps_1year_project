@@ -1,6 +1,8 @@
 #ifndef FILE_IO_H
 #define FILE_IO_H
 
-int read_movie_file(const char* filename);
+#include "src/data_structs.h"
+
+int read_movie_file(SA_DynamicArray* films, const char* filename);
 
 #endif

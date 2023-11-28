@@ -1,40 +1,39 @@
 #include <stdio.h>
+#include <inttypes.h>
 #include <SA/memory/dynamic_array.h>
 #include "src/io/parser_txt.h"
 
-int read_movie_file(const char* filename)
+int read_movie_file(SA_DynamicArray* films, const char* filename)
 {
     int error_code = 0;
     
-    FILE* fd = fopen(filename, "r");
-    if (fd == NULL)
+    FILE* file = fopen(filename, "r");
+    if (file == NULL)
     {
-        goto Quit;
+        error_code = 1;
+        goto QUIT;
     }
 
-    char buf[1024];
-    uint64_t filmID;
-    uint64_t userID;
-    uint8_t rating;
+    Film film = {.rating_count = 0, .sum_rating = 0};
+
+    fscanf(file, "%" PRIu32 ":", &(film.film_id));
+
+    SA_DynamicArray* ratings = SA_dynarray_create(Rating);
+    Rating rating;
     uint16_t year;
-    uint8_t month;
-    uint8_t day;
-    fscanf(fd, "%lu:", &filmID);
-    printf("%lu\n", filmID);
-    while (fgets(buf, 1000, fd))
+    
+    while (fscanf(file, "%" PRIu32 ",%" PRIu8 ",%" PRIu16 "-%" PRIu8 "-%" PRIu8, &(rating.user_id), &(rating.note), &year, &(rating.month), &(rating.day)) != EOF)
     {
-        sscanf(buf, "%lu,%hhu,%hu-%hhu-%hhu", &userID, &rating, &year, &month, &day);
-        printf("%lu\n", userID);
-        printf("%hhu\n", rating);
-        printf("%hu\n", year);
-        printf("%hhu\n", month);
-        printf("%hhu\n", day);
+        rating.offseted_year = year - YEARS_OFFSET;
+        SA_dynarray_append(Rating, ratings, rating);
+        film.rating_count++;
+        film.sum_rating += rating.note;
     }
 
-    Quit:
-        if (fd != NULL)
-        {
-            fclose(fd);
-        }
-        return error_code;
+    film.ratings = ratings;
+
+    SA_dynarray_append(Film, films, film);
+
+QUIT:
+    return error_code;
 }
