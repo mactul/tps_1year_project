@@ -9,4 +9,6 @@ typedef struct {
     double average_rating;
 } Movie;
 
+void append_rating(uint64_t movie_id, uint8_t rating, Movie* movies);
+
 #endif

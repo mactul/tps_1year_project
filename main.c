@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include "file-io.h"
+#include "movie-rating.h"
+
+Movie movies[17770];
 
 int main()
 {
-    for (int i = 0; i < 100; i++)
-    {
+    // for (int i = 0; i < 100; i++)
+    // {
         read_movie_file("download/training_set/mv_0000001.txt");
-    }
+    // }
 }
