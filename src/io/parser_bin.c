@@ -33,6 +33,8 @@ SA_DynamicArray* read_all_films(const char* in_filename)
         uint64_t current_position = ftell(file);
         fseek(file, SEEK_SET, offset);
         f.ratings = SA_dynarray_create(Rating);
+
+        // Read Rating structures
         for (uint32_t j = 0; j < f.rating_count; j++)
         {
             Rating r;
@@ -48,6 +50,7 @@ SA_DynamicArray* read_all_films(const char* in_filename)
     }
 
 QUIT:
+    // Free memory if needed
     if (file == NULL)
     {
         return NULL;
