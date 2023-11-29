@@ -2,11 +2,19 @@
 #include "src/io/parser_txt.h"
 #include "src/io/parser_bin.h"
 #include "src/io/writer_bin.h"
+#include "src/arg-handler.h"
 
-int main()
+int main(int argc, char* argv[])
 {
     SA_DynamicArray* films1 = NULL;
     SA_DynamicArray* films2 = NULL;
+
+    Arguments args_structure;
+
+    if (!parse_args(argc, argv, &args_structure))
+    {
+        goto EXIT_LBL;
+    }
 
     SA_init();
 
