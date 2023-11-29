@@ -20,4 +20,6 @@ typedef struct _rating {
     uint8_t offseted_year;
 } Rating;
 
+void films_list_free(SA_DynamicArray** films);
+
 #endif
