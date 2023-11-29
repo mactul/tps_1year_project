@@ -50,6 +50,7 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
     for (uint64_t i = 0; i < len; i++)
     {
         Film f = SA_dynarray_get(Film, films, i);
+        f.ratings = NULL;
         if (fwrite(&f, sizeof(Film), 1, file) <= 0)
         {
             error_code = 3;

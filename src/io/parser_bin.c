@@ -31,7 +31,7 @@ SA_DynamicArray* read_all_films(const char* in_filename)
             goto QUIT;
         }
         uint64_t current_position = ftell(file);
-        fseek(file, SEEK_SET, offset);
+        fseek(file, offset, SEEK_SET);
         f.ratings = SA_dynarray_create(Rating);
 
         // Read Rating structures
@@ -46,7 +46,7 @@ SA_DynamicArray* read_all_films(const char* in_filename)
             SA_dynarray_append(Rating, f.ratings, r);
         }
         SA_dynarray_append(Film, films, f);
-        fseek(file, SEEK_SET, current_position);
+        fseek(file, current_position, SEEK_SET);
     }
 
 QUIT:

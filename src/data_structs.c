@@ -2,6 +2,10 @@
 
 void films_list_free(SA_DynamicArray** films)
 {
+    if(*films == NULL)
+    {
+        return;
+    }
     uint64_t length = SA_dynarray_size(*films);
     for (uint64_t i = 0; i < length; i++)
     {

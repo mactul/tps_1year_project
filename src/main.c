@@ -24,6 +24,8 @@ int main(int argc, char* argv[])
         goto EXIT_LBL;
     }
     read_movie_file(films1, "download/training_set/mv_0000001.txt");
+    read_movie_file(films1, "download/training_set/mv_0000002.txt");
+
     if (write_films("out/data.bin", films1))
     {
         goto EXIT_LBL;
