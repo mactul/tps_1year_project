@@ -6,3 +6,4 @@ download/training_set/*
 .xmake
 build
 out
+*.bin
