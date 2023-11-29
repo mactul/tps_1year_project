@@ -1,74 +1,38 @@
+#include <stdio.h>
+#include <SA/SA.h>
 #include "writer_bin.h"
 
-void make_path(char* out_folder)
-{
-    char* out_copy = malloc((strlen(out_folder) + 1) * sizeof(char));
-    strcpy(out_copy, out_folder);
-
-    long last_slash = -1;
-
-    for (size_t i = 0; i < strlen(out_folder); i++)
-    {
-        if (out_folder[i] == '/')
-        {
-            last_slash = i;
-        }
-    }
-
-    if (last_slash == -1)
-    {
-        struct stat st = {0};
-        if (stat(out_copy, &st) == -1)
-        {
-            mkdir(out_copy, 0755);
-        }
-        free(out_copy);
-        return;
-    }
-    
-    out_folder[last_slash] = '\0';
-
-    make_path(out_folder);
-
-    struct stat st = {0};
-    if (stat(out_copy, &st) == -1)
-    {
-        mkdir(out_copy, 0755);
-    }
-
-    free(out_copy);
-}
 
 int write_films(const char* out_filename, SA_DynamicArray* films)
 {
-    char* out_folder = malloc((strlen(out_filename) + 1) * sizeof(char));
-    strcpy(out_folder, out_filename);
-
     long last_slash = -1;
-
-    for (size_t i = 0; i < strlen(out_filename); i++)
-    {
-        if (out_folder[i] == '/')
-        {
-            last_slash = i;
-        }
-    }
-
-    if (last_slash != -1)
-    {
-        out_folder[last_slash] = '\0';
-        make_path(out_folder);
-    }
-
-    free(out_folder);
+    char* out_folder = NULL;
 
     if (films == NULL)
     {
         return 6;
     }
+    
+    out_folder = (char*) SA_malloc((SA_strlen(out_filename) + 1) * sizeof(char));
+    SA_strcpy(out_folder, out_filename);
+
+    for (int i = 0; i < SA_strlen(out_filename); i++)
+    {
+        if (out_folder[i] == '/')
+        {
+            last_slash = i;
+        }
+    }
+    if (last_slash != -1)
+    {
+        out_folder[last_slash] = '\0';
+        SA_recursive_mkdir(out_folder);
+    }
+
+    SA_free(&out_folder);
 
     int error_code = 0;
-    FILE* file = fopen(out_filename, "w+");
+    FILE* file = fopen(out_filename, "wb");
     if (file == NULL)
     {
         error_code = 1;
@@ -107,12 +71,14 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
                 goto QUIT;
             }
         }
+        uint64_t end_pos = ftell(file);
         fseek(file, sizeof(uint64_t) + i * sizeof(Film) + 16, SEEK_SET);
         if (fwrite(&pos, sizeof(long), 1, file) <= 0)
         {
             error_code = 5;
             goto QUIT;
         }
+        fseek(file, end_pos, SEEK_SET);
     }
 
 QUIT:
