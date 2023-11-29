@@ -20,6 +20,16 @@ typedef struct _rating {
     uint8_t offseted_year;
 } Rating;
 
+typedef struct _arguments {
+    long int limit;
+    long int film_id;
+    long int min_reviews;
+    long int timeout_milli;
+    const char* output_folder;
+    const char* only_reviewers;
+    const char* bad_reviewers;
+} Arguments;
+
 void films_list_free(SA_DynamicArray** films);
 
 #endif
