@@ -4,7 +4,7 @@ void print_usage(void)
 {
     puts(
         "Prog, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"
-        "Utilisation: ./prog [options]\n\n"
+        "Utilisation: ./prog [options] <fichiers>\n\n"
         "Options:\n"
         "-h\t\t\tAfficher cette aide\n"
         "-f DOSSIER\t\tDéfinir DOSSIER comme dossier de sortie\n"
@@ -13,11 +13,11 @@ void print_usage(void)
         "-c \"X, Y\"\t\tNe prendre en compte que les avis des clients X, Y\n"
         "-b \"X, Y\"\t\tNe pas prendre en compte les avis des clients X, Y\n"
         "-e MIN\t\t\tNe prendre en compte que les avis de clients ayant vu plus de MIN films\n"
-        "-t TIMEOUT\t\tDéfinir TIMEOUT comme temps d'exécution maximum\n"
+        "-t TIMEOUT\t\tDéfinir TIMEOUT comme temps d'exécution maximum"
     );
 }
 
-bool parse_args(int argc, char* argv[], Arguments* args_structure)
+bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest)
 {
     args_structure->bad_reviewers = NULL;
     args_structure->film_id = -1;
@@ -87,6 +87,13 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure)
                 print_usage();
                 return false;
         }
+    }
+    *arg_rest = optind;
+    if (optind == argc)
+    {
+        fprintf(stderr, "Pas de fichiers fournis\n");
+        print_usage();
+        return false;
     }
     return true;
 }

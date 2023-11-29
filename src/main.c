@@ -10,8 +10,9 @@ int main(int argc, char* argv[])
     SA_DynamicArray* films2 = NULL;
 
     Arguments args_structure;
+    int index_remaining;
 
-    if (!parse_args(argc, argv, &args_structure))
+    if (!parse_args(argc, argv, &args_structure, &index_remaining))
     {
         goto EXIT_LBL;
     }
@@ -23,8 +24,11 @@ int main(int argc, char* argv[])
     {
         goto EXIT_LBL;
     }
-    read_movie_file(films1, "download/training_set/mv_0000001.txt");
-    read_movie_file(films1, "download/training_set/mv_0000002.txt");
+
+    for (int index = index_remaining; index < argc; index++)
+    {
+        read_movie_file(films1, argv[index]);
+    }
 
     if (write_films("out/data.bin", films1))
     {
