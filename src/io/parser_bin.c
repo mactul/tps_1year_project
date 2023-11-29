@@ -11,7 +11,7 @@ SA_DynamicArray* read_all_films(const char* in_filename)
         goto QUIT;
     }
 
-    SA_DynamicArray* films = SA_dynarray_create(Film);
+    SA_DynamicArray* films = SA_dynarray_create_size_hint(Film, EXPECTED_FILM_NUMBERS);
     uint64_t film_count;
     fread(&film_count, sizeof(uint64_t), 1, file);
 
@@ -32,7 +32,7 @@ SA_DynamicArray* read_all_films(const char* in_filename)
         }
         uint64_t current_position = ftell(file);
         fseek(file, offset, SEEK_SET);
-        f.ratings = SA_dynarray_create(Rating);
+        f.ratings = SA_dynarray_create_size_hint(Rating, EXPECTED_RATINGS_PER_FILM_NUMBER);
 
         // Read Rating structures
         for (uint32_t j = 0; j < f.rating_count; j++)

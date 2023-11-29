@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
     SA_init();
 
-    films = SA_dynarray_create(Film);
+    films = SA_dynarray_create_size_hint(Film, EXPECTED_FILM_NUMBERS);
     if(films == NULL)
     {
         goto EXIT_LBL;

@@ -23,7 +23,7 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
 
     fscanf(file, "%" PRIu32 ":", &(film.film_id));
 
-    SA_DynamicArray* ratings = SA_dynarray_create(Rating);
+    SA_DynamicArray* ratings = SA_dynarray_create_size_hint(Rating, EXPECTED_RATINGS_PER_FILM_NUMBER);
     Rating rating;
     uint16_t year;
     

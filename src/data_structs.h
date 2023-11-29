@@ -5,6 +5,9 @@
 
 #define YEARS_OFFSET 1970
 
+#define EXPECTED_FILM_NUMBERS 18000
+#define EXPECTED_RATINGS_PER_FILM_NUMBER 256
+
 typedef struct _film {
     uint32_t film_id;
     uint32_t rating_count;
