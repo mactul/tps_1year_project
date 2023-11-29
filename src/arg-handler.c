@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <SA/SA.h>
 #include "arg-handler.h"
 
 void print_usage(void)
@@ -31,50 +34,54 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
     opterr = 0;
     while ((c = getopt(argc, argv, "f:l:s:c:b:e:t:h")) != -1)
     {
-        char* end;
+        int i = 0;
+        while(optarg[i] == ' ')
+        {
+            i++;
+        }
         switch(c)
         {
             case 'f':
-                args_structure->output_folder = optarg;
+                args_structure->output_folder = optarg+i;
                 break;
             case 'l':
-                args_structure->limit = strtol(optarg, &end, 10);
-                if (*end != '\0')
+                args_structure->limit = SA_str_to_uint64(optarg+i);
+                if (args_structure->limit == 0)
                 {
-                    fprintf(stderr, "Invalid limit\n");
+                    SA_print_error("Invalid limit\n");
                     print_usage();
                     return false;
                 }
                 break;
             case 's':
-                args_structure->film_id = strtol(optarg, &end, 10);
-                if (*end != '\0')
+                args_structure->film_id = SA_str_to_uint64(optarg+i);
+                if (args_structure->film_id == 0 && SA_get_last_error() == SA_ERROR_NAN)
                 {
-                    fprintf(stderr, "Invalid film ID\n");
+                    SA_print_error("Invalid film ID\n");
                     print_usage();
                     return false;
                 }
                 break;
             case 'c':
-                args_structure->only_reviewers = optarg;
+                args_structure->only_reviewers = optarg+i;
                 break;
             case 'b':
-                args_structure->bad_reviewers = optarg;
+                args_structure->bad_reviewers = optarg+i;
                 break;
             case 'e':
-                args_structure->min_reviews = strtol(optarg, &end, 10);
-                if (*end != '\0')
+                args_structure->min_reviews = SA_str_to_uint64(optarg+i);
+                if (args_structure->min_reviews == 0 && SA_get_last_error() == SA_ERROR_NAN)
                 {
-                    fprintf(stderr, "Invalid minimum reviews\n");
+                    SA_print_error("Invalid minimum reviews\n");
                     print_usage();
                     return false;
                 }
                 break;
             case 't':
-                args_structure->min_reviews = strtol(optarg, &end, 10);
-                if (*end != '\0')
+                args_structure->timeout_milli = SA_str_to_uint64(optarg+i);
+                if (args_structure->timeout_milli == 0)
                 {
-                    fprintf(stderr, "Invalid minimum reviews\n");
+                    SA_print_error("Invalid timeout\n");
                     print_usage();
                     return false;
                 }
@@ -83,7 +90,7 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
                 print_usage();
                 return false;
             case '?':
-                fprintf(stderr, "Invalid command line options\n");
+                SA_print_error("Invalid command line options\n");
                 print_usage();
                 return false;
         }
@@ -91,7 +98,7 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
     *arg_rest = optind;
     if (optind == argc)
     {
-        fprintf(stderr, "Pas de fichiers fournis\n");
+        SA_print_error("Pas de fichiers fournis\n");
         print_usage();
         return false;
     }
