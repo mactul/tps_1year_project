@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <SA/SA.h>
-#include "src/io/parser_txt.h"
-#include "src/io/parser_bin.h"
-#include "src/io/writer_bin.h"
+#include "src/dataset_io/parser_txt.h"
+#include "src/dataset_io/parser_bin.h"
+#include "src/dataset_io/writer_bin.h"
 #include "src/arg-handler.h"
 
 #define MAX_OUT_FOLDER_PATH 256

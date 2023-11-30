@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <SA/memory/dynamic_array.h>
-#include "src/io/parser_txt.h"
+#include "src/dataset_io/parser_txt.h"
 
 static int compare_ratings(const void* el1, const void* el2)
 {
