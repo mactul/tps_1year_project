@@ -41,5 +41,6 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
     SA_dynarray_append(Film, films, film);
 
 QUIT:
+    fclose(file);
     return error_code;
 }
