@@ -7,7 +7,7 @@ void print_usage(void)
 {
     puts(
         "Prog, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"
-        "Utilisation: ./prog [options] <fichiers>\n\n"
+        "Utilisation: ./prog [options] <fichier_binaire>\n\n"
         "Options:\n"
         "-h\t\t\tAfficher cette aide\n"
         "-f DOSSIER\t\tDéfinir DOSSIER comme dossier de sortie\n"

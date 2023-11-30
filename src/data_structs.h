@@ -3,6 +3,8 @@
 
 #include <SA/memory/dynamic_array.h>
 
+#define NUMBER_OF_YEARS_LOGGED_IN_STATS 10
+
 #define YEARS_OFFSET 1970
 
 #define EXPECTED_FILM_NUMBERS 18000
@@ -40,6 +42,8 @@ typedef struct _film_stats {
     float median_rating;
     float standard_deviation;
     float recommendation;
+    float mean_rating_over_years[NUMBER_OF_YEARS_LOGGED_IN_STATS];
+    uint32_t kept_rating_count_over_years[NUMBER_OF_YEARS_LOGGED_IN_STATS];
 } FilmStats;
 
 void films_list_free(SA_DynamicArray** films);

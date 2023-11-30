@@ -29,6 +29,11 @@ int main(int argc, char* argv[])
             {
                 SA_strncpy(out_folder_path, argv[i], MAX_OUT_FOLDER_PATH);
             }
+            else
+            {
+                SA_print_error("-o requires an argument\n");
+                goto EXIT_LBL;
+            }
         }
         else if(read_movie_file(films, argv[i]) != 0)
         {
