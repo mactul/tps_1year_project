@@ -1,20 +1,63 @@
 #include <stdio.h>
 #include "src/dataset_io/parser_bin.h"
 
-SA_DynamicArray* read_all_films(const char* in_filename)
+SA_DynamicArray* read_all_reviewers(FILE* file)
+{
+    int error_code = 0;
+    uint64_t reviewer_count;
+
+    if (file == NULL)
+    {
+        error_code = 1;
+        goto ERROR;
+    }
+
+    if (fread(&reviewer_count, sizeof(reviewer_count), 1, file) <= 0)
+    {
+        error_code = 1;
+        goto ERROR;
+    }
+
+    SA_DynamicArray* reviewers = SA_dynarray_create_size_hint(Reviewer, reviewer_count + 1);
+
+    for (uint64_t i = 0; i < reviewer_count; i++)
+    {
+        Reviewer r;
+        if (fread(&r, sizeof(Rating), 1, file) <= 0)
+        {
+            error_code = 1;
+            goto ERROR;
+        }
+        SA_dynarray_append(Reviewer, reviewers, r);
+    }
+
+ERROR:
+    if (!error_code)
+    {
+        return reviewers;
+    }
+    SA_dynarray_free(reviewers);
+    return NULL;
+}
+
+SA_DynamicArray* read_all_films(FILE* file)
 {
     int error_code = 0;
 
-    FILE* file = fopen(in_filename, "r");
     if (file == NULL)
     {
         error_code = 1;
         goto QUIT;
     }
 
-    SA_DynamicArray* films = SA_dynarray_create_size_hint(Film, EXPECTED_FILM_NUMBERS);
     uint64_t film_count;
-    fread(&film_count, sizeof(uint64_t), 1, file);
+    if (fread(&film_count, sizeof(film_count), 1, file) <= 0)
+    {
+        error_code = 1;
+        goto QUIT;
+    }
+
+    SA_DynamicArray* films = SA_dynarray_create_size_hint(Film, film_count + 1); // +1 isn't really useful but just in case
 
     // Read Film structures
     for (uint64_t i = 0; i < film_count; i++)
@@ -27,7 +70,8 @@ SA_DynamicArray* read_all_films(const char* in_filename)
         }
         uint64_t current_position = ftell(file);
         fseek(file, (size_t)f.ratings, SEEK_SET);
-        f.ratings = SA_dynarray_create_size_hint(Rating, EXPECTED_RATINGS_PER_FILM_NUMBER);
+
+        f.ratings = SA_dynarray_create_size_hint(Rating, f.rating_count + 1); // +1 : same as before
 
         // Read Rating structures
         for (uint32_t j = 0; j < f.rating_count; j++)
@@ -50,7 +94,6 @@ QUIT:
     {
         return NULL;
     }
-    fclose(file);
     if (!error_code)
     {
         return films;

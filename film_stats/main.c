@@ -11,6 +11,7 @@
 int main(int argc, char* argv[])
 {
     SA_DynamicArray* films = NULL;
+    SA_DynamicArray* reviewers = NULL;
     char out_folder_path[MAX_OUT_FOLDER_PATH] = "out/data.bin";
     Arguments args_structure;
     int index_remaining;
@@ -28,7 +29,16 @@ int main(int argc, char* argv[])
         SA_strcpy(out_folder_path, argv[index_remaining]);
     }
 
-    films = read_all_films(out_folder_path);
+
+    FILE* file = fopen(out_folder_path, "r");
+    if (file == NULL)
+    {
+        goto EXIT_LBL;
+    }
+    films = read_all_films(file);
+    reviewers = read_all_reviewers(file);
+    fclose(file);
+
     if (films == NULL)
     {
         goto EXIT_LBL;

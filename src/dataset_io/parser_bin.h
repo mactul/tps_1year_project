@@ -3,6 +3,7 @@
 
 #include "src/data_structs.h"
 
-SA_DynamicArray* read_all_films(const char* in_filename);
+SA_DynamicArray* read_all_reviewers(FILE* file);
+SA_DynamicArray* read_all_films(FILE* file);
 
 #endif

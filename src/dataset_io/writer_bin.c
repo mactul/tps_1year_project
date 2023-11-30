@@ -2,6 +2,65 @@
 #include <SA/SA.h>
 #include "writer_bin.h"
 
+static int write_users(FILE* file, SA_DynamicArray* films)
+{
+    int error_code = 0;
+
+    if (films == NULL)
+    {
+        return 6;
+    }
+
+    SA_DynamicArray* user_rate_count = SA_dynarray_create(uint32_t);
+
+    SA_activate_zero_filling(user_rate_count);
+
+    uint32_t user_count = 0;
+
+    for (uint32_t i = 0; i < (uint32_t) SA_dynarray_size(films); i++)
+    {
+        Film f = SA_dynarray_get(Film, films, i);
+        for (uint32_t j = 0; j < (uint32_t) SA_dynarray_size(f.ratings); j++)
+        {
+            Rating rating = SA_dynarray_get(Rating, f.ratings, j);
+            uint32_t rate_count = SA_dynarray_get(uint32_t, user_rate_count, rating.user_id);
+            if (rate_count == 0)
+            {
+                user_count++;
+            }
+            SA_dynarray_set(uint32_t, user_rate_count, rating.user_id, rate_count + 1);
+        }
+    }
+
+    if (fwrite(&user_count, sizeof(user_count), 1, file) <= 0)
+    {
+        error_code = 1;
+        goto QUIT;
+    }
+
+    for (uint32_t i = 0; i < SA_dynarray_size(user_rate_count); i++)
+    {
+        uint32_t count = SA_dynarray_get(uint32_t, user_rate_count, i);
+        if (count == 0)
+        {
+            continue;
+        }
+        if (fwrite(&i, sizeof(i), 1, file) <= 0)
+        {
+            error_code = 2;
+            goto QUIT;
+        }
+        if (fwrite(&count, sizeof(count), 1, file) <= 0)
+        {
+            error_code = 2;
+            goto QUIT;
+        }
+    }
+
+QUIT:
+    SA_free(user_rate_count);
+    return error_code;
+}
 
 int write_films(const char* out_filename, SA_DynamicArray* films)
 {
@@ -81,6 +140,8 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
         }
         fseek(file, end_pos, SEEK_SET);
     }
+
+    error_code = write_users(file, films);
 
 QUIT:
     if (file != NULL)
