@@ -36,11 +36,8 @@ typedef struct _arguments {
 
 typedef struct _film_stats {
     uint32_t film_id;
-    uint32_t kept_rating_count;
-    float mean_rating;
-    float median_rating;
-    float standard_deviation;
     float recommendation;
+    uint32_t max_year;
     float mean_rating_over_years[NUMBER_OF_YEARS_LOGGED_IN_STATS];
     uint32_t kept_rating_count_over_years[NUMBER_OF_YEARS_LOGGED_IN_STATS];
 } FilmStats;
