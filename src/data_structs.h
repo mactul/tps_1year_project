@@ -24,14 +24,23 @@ typedef struct _rating {
 } Rating;
 
 typedef struct _arguments {
-    long int limit;
-    long int film_id;
-    long int min_reviews;
-    long int timeout_milli;
+    uint32_t limit;
+    uint32_t film_id;
+    uint32_t min_reviews;
+    uint32_t timeout_milli;
     const char* output_folder;
     const char* only_reviewers;
     const char* bad_reviewers;
 } Arguments;
+
+typedef struct _film_stats {
+    uint32_t film_id;
+    uint32_t kept_rating_count;
+    float mean_rating;
+    float median_rating;
+    float standard_deviation;
+    float recommendation;
+} FilmStats;
 
 void films_list_free(SA_DynamicArray** films);
 
