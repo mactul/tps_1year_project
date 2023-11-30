@@ -3,6 +3,8 @@
 
 SA_DynamicArray* read_all_reviewers(FILE* file)
 {
+    SA_DynamicArray* reviewers = NULL;
+
     int error_code = 0;
     uint64_t reviewer_count;
 
@@ -18,7 +20,7 @@ SA_DynamicArray* read_all_reviewers(FILE* file)
         goto ERROR;
     }
 
-    SA_DynamicArray* reviewers = SA_dynarray_create_size_hint(Reviewer, reviewer_count + 1);
+    reviewers = SA_dynarray_create_size_hint(Reviewer, reviewer_count + 1);
 
     for (uint64_t i = 0; i < reviewer_count; i++)
     {
@@ -36,7 +38,7 @@ ERROR:
     {
         return reviewers;
     }
-    SA_dynarray_free(reviewers);
+    SA_dynarray_free(&reviewers);
     return NULL;
 }
 
@@ -99,11 +101,11 @@ QUIT:
         return films;
     }
     printf("%d\n", error_code);
-    for (uint64_t i = 0; i < film_count; i++)
+    for (uint64_t i = 0; i < SA_dynarray_size(films); i++)
     {
         Film f = SA_dynarray_get(Film, films, i);
         SA_dynarray_free(&f.ratings);
-        SA_dynarray_free(&films);
     }
+    SA_dynarray_free(&films);
     return NULL;
 }

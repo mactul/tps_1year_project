@@ -1,6 +1,7 @@
 #include "film_stats/filters/min_reviews.h"
+#include <SA/memory/mem_alloc.h>
 
-uint32_t review_count_for_user(const SA_DynamicArray* reviewers, uint32_t user_id)
+uint32_t review_count_for_user(SA_DynamicArray* reviewers, uint32_t user_id)
 {
     for (uint32_t i = 0; i < (uint32_t) SA_dynarray_size(reviewers); i++)
     {
@@ -13,9 +14,9 @@ uint32_t review_count_for_user(const SA_DynamicArray* reviewers, uint32_t user_i
     return 0;
 }
 
-Film* filter_min_reviews(const SA_DynamicArray* films, const Film* film, const SA_DynamicArray* reviewers, uint32_t min)
+Film* filter_min_reviews(const Film* film, SA_DynamicArray* reviewers, uint32_t min)
 {
-    Film* without_reviews = malloc(sizeof(Film));
+    Film* without_reviews = SA_malloc(sizeof(Film));
     if (without_reviews == NULL)
     {
         return NULL;

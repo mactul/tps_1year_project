@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
 
 EXIT_LBL:
     films_list_free(&films);
+    SA_dynarray_free(&reviewers);
 
     SA_destroy();
 }

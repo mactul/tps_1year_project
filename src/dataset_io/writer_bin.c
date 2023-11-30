@@ -23,7 +23,11 @@ static int write_users(FILE* file, SA_DynamicArray* films)
         for (uint32_t j = 0; j < (uint32_t) SA_dynarray_size(f.ratings); j++)
         {
             Rating rating = SA_dynarray_get(Rating, f.ratings, j);
-            uint32_t rate_count = SA_dynarray_get(uint32_t, user_rate_count, rating.user_id);
+            uint32_t rate_count = 0;
+            if (SA_dynarray_size(user_rate_count) > rating.user_id)
+            {
+                rate_count = SA_dynarray_get(uint32_t, user_rate_count, rating.user_id);
+            }
             if (rate_count == 0)
             {
                 user_count++;
@@ -58,7 +62,7 @@ static int write_users(FILE* file, SA_DynamicArray* films)
     }
 
 QUIT:
-    SA_free(user_rate_count);
+    SA_dynarray_free(&user_rate_count);
     return error_code;
 }
 
@@ -99,7 +103,7 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
     }
     uint64_t len = SA_dynarray_size(films);
 
-    if (fwrite(&len, sizeof(uint64_t), 1, file) <= 0)
+    if (fwrite(&len, sizeof(len), 1, file) <= 0)
     {
         error_code = 2;
         goto QUIT;
@@ -109,7 +113,6 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
     for (uint64_t i = 0; i < len; i++)
     {
         Film f = SA_dynarray_get(Film, films, i);
-        f.ratings = NULL;
         if (fwrite(&f, sizeof(Film), 1, file) <= 0)
         {
             error_code = 3;
