@@ -20,19 +20,13 @@ SA_DynamicArray* read_all_films(const char* in_filename)
     for (uint64_t i = 0; i < film_count; i++)
     {
         Film f;
-        if (fread(&f, sizeof(Film) - sizeof(uint64_t), 1, file) <= 0)
-        {
-            error_code = 1;
-            goto QUIT;
-        }
-        uint64_t offset = 0;
-        if (fread(&offset, sizeof(uint64_t), 1, file) <= 0)
+        if (fread(&f, sizeof(Film), 1, file) <= 0)
         {
             error_code = 1;
             goto QUIT;
         }
         uint64_t current_position = ftell(file);
-        fseek(file, offset, SEEK_SET);
+        fseek(file, (size_t)f.ratings, SEEK_SET);
         f.ratings = SA_dynarray_create_size_hint(Rating, EXPECTED_RATINGS_PER_FILM_NUMBER);
 
         // Read Rating structures

@@ -13,7 +13,6 @@
 typedef struct _film {
     uint32_t film_id;
     uint32_t rating_count;
-    uint64_t sum_rating;
     SA_DynamicArray* ratings;
 } Film;
 

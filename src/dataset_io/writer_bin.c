@@ -62,8 +62,8 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
     for (uint64_t i = 0; i < len; i++)
     {
         Film f = SA_dynarray_get(Film, films, i);
-        uint64_t pos = ftell(file);
-        for (uint64_t j = 0; j < f.rating_count; j++)
+        size_t pos = ftell(file);
+        for (uint32_t j = 0; j < f.rating_count; j++)
         {
             Rating r = SA_dynarray_get(Rating, f.ratings, j);
             if (fwrite(&r, sizeof(Rating), 1, file) <= 0)
@@ -72,9 +72,9 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
                 goto QUIT;
             }
         }
-        uint64_t end_pos = ftell(file);
-        fseek(file, sizeof(uint64_t) + i * sizeof(Film) + 16, SEEK_SET);
-        if (fwrite(&pos, sizeof(long), 1, file) <= 0)
+        size_t end_pos = ftell(file);
+        fseek(file, sizeof(uint64_t) + i * sizeof(Film) + offsetof(Film, ratings), SEEK_SET);
+        if (fwrite(&pos, sizeof(SA_DynamicArray*), 1, file) <= 0)
         {
             error_code = 5;
             goto QUIT;

@@ -19,7 +19,7 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
         goto QUIT;
     }
 
-    Film film = {.rating_count = 0, .sum_rating = 0};
+    Film film = {.rating_count = 0};
 
     fscanf(file, "%" PRIu32 ":", &(film.film_id));
 
@@ -32,7 +32,6 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
         rating.offseted_year = year - YEARS_OFFSET;
         SA_dynarray_append(Rating, ratings, rating);
         film.rating_count++;
-        film.sum_rating += rating.note;
     }
 
     SA_dynarray_qsort(ratings, compare_ratings);
