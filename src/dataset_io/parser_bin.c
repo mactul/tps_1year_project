@@ -25,7 +25,7 @@ SA_DynamicArray* read_all_reviewers(FILE* file)
     for (uint64_t i = 0; i < reviewer_count; i++)
     {
         Reviewer r;
-        if (fread(&r, sizeof(Rating), 1, file) <= 0)
+        if (fread(&r, sizeof(Reviewer), 1, file) <= 0)
         {
             error_code = 1;
             goto ERROR;
