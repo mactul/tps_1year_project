@@ -34,7 +34,7 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
         film.rating_count++;
     }
 
-    SA_dynarray_qsort(ratings, compare_ratings);
+    // SA_dynarray_qsort(ratings, compare_ratings);
 
     film.ratings = ratings;
 

@@ -61,6 +61,8 @@ SA_DynamicArray* read_all_films(FILE* file)
 
     SA_DynamicArray* films = SA_dynarray_create_size_hint(Film, film_count + 1); // +1 isn't really useful but just in case
 
+    uint64_t max_seek_offset = 0;
+
     // Read Film structures
     for (uint64_t i = 0; i < film_count; i++)
     {
@@ -86,9 +88,18 @@ SA_DynamicArray* read_all_films(FILE* file)
             }
             SA_dynarray_append(Rating, f.ratings, r);
         }
+
+        uint64_t rate_seek_end_offset = ftell(file);
+        if (rate_seek_end_offset > max_seek_offset)
+        {
+            max_seek_offset = rate_seek_end_offset;
+        }
+
         SA_dynarray_append(Film, films, f);
         fseek(file, current_position, SEEK_SET);
     }
+
+    fseek(file, max_seek_offset, SEEK_SET);
 
 QUIT:
     // Free memory if needed

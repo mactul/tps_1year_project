@@ -5,7 +5,7 @@
 
 #define NUMBER_OF_YEARS_LOGGED_IN_STATS 10
 
-#define YEARS_OFFSET 1970
+#define YEARS_OFFSET 1850
 
 #define EXPECTED_REVIEWER_NUMBERS 500000
 #define EXPECTED_FILM_NUMBERS 18000
@@ -31,10 +31,10 @@ typedef struct _rating {
 } Rating;
 
 typedef struct _arguments {
-    uint32_t limit;
-    uint32_t film_id;
-    uint32_t min_reviews;
-    uint32_t timeout_milli;
+    int32_t limit;
+    int32_t film_id;
+    int32_t min_reviews;
+    int32_t timeout_milli;
     const char* output_folder;
     const char* only_reviewers;
     const char* bad_reviewers;

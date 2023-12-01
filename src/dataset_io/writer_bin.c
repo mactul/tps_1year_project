@@ -11,11 +11,11 @@ static int write_users(FILE* file, SA_DynamicArray* films)
         return 6;
     }
 
-    SA_DynamicArray* user_rate_count = SA_dynarray_create(uint32_t);
+    SA_DynamicArray* user_rate_count = SA_dynarray_create_size_hint(uint32_t, EXPECTED_REVIEWER_NUMBERS);
 
     SA_activate_zero_filling(user_rate_count);
 
-    uint32_t user_count = 0;
+    uint64_t user_count = 0;
 
     for (uint32_t i = 0; i < (uint32_t) SA_dynarray_size(films); i++)
     {
@@ -41,6 +41,8 @@ static int write_users(FILE* file, SA_DynamicArray* films)
         error_code = 1;
         goto QUIT;
     }
+
+    // User id are naturally sorted because they are arranged in the array by indexes.
 
     for (uint32_t i = 0; i < SA_dynarray_size(user_rate_count); i++)
     {

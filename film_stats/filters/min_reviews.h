@@ -3,6 +3,6 @@
 
 #include "src/data_structs.h"
 
-Film* filter_min_reviews(const Film* film, SA_DynamicArray* reviewers, uint32_t min);
+void filter_min_reviews(Film* film_filtered, const Film* film_to_filter, const SA_DynamicArray* reviewers, uint32_t min);
 
 #endif
