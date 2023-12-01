@@ -8,9 +8,8 @@
 
 #define MAX_OUT_FOLDER_PATH 256
 
-void sigint_close_files(int signum)
+void sigint_close_files(int signum __attribute__((unused)))
 {
-    signum++;
     printf("Attendez une minute, c'est bientôt fini\n");
     return;
 }
