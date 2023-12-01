@@ -3,6 +3,6 @@
 
 #include <SA/memory/dynamic_array.h>
 
-void write_stats(SA_DynamicArray* stats);
+void write_stats(const char* stats_filename, SA_DynamicArray* stats);
 
 #endif

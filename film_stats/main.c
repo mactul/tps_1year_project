@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <SA/SA.h>
+#include <signal.h>
 #include "src/dataset_io/parser_txt.h"
 #include "src/dataset_io/parser_bin.h"
 #include "src/dataset_io/writer_bin.h"
@@ -7,9 +8,17 @@
 
 #define MAX_OUT_FOLDER_PATH 256
 
+void sigint_close_files(int signum)
+{
+    signum++;
+    printf("Attendez une minute, c'est bientôt fini\n");
+    return;
+}
 
 int main(int argc, char* argv[])
 {
+    signal(SIGINT, sigint_close_files);
+
     SA_DynamicArray* films = NULL;
     SA_DynamicArray* reviewers = NULL;
     char out_folder_path[MAX_OUT_FOLDER_PATH] = "out/data.bin";
@@ -44,9 +53,12 @@ int main(int argc, char* argv[])
         goto EXIT_LBL;
     }
 
+    goto EXIT_LBL;
+
 EXIT_LBL:
     films_list_free(&films);
     SA_dynarray_free(&reviewers);
 
     SA_destroy();
+
 }
