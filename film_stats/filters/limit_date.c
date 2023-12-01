@@ -41,7 +41,7 @@ void filter_date_from(Film* film_filtered, const Film* film_to_filter, uint8_t o
         Rating r = SA_dynarray_get(Rating, film_to_filter->ratings, i);
         if ((date_after * 2 - 1) * compare_rating_date(r, offsetted_year, month, day) >= 0) // if date_after == true, take the positive value of comparison, else take negative value
         {
-            SA_dynarray_append(Rating, film_to_filter->ratings, r);
+            SA_dynarray_append(Rating, film_filtered->ratings, r);
             film_filtered->rating_count++;
         }
     }
