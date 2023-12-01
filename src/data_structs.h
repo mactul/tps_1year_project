@@ -31,10 +31,10 @@ typedef struct _rating {
 } Rating;
 
 typedef struct _arguments {
-    int32_t limit;
     int32_t film_id;
     int32_t min_reviews;
     int32_t timeout_milli;
+    const char* limit;
     const char* output_folder;
     const char* only_reviewers;
     const char* bad_reviewers;

@@ -26,7 +26,7 @@ static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* re
 
 int main(int argc, char* argv[])
 {
-    signal(SIGINT, sigint_close_files);
+    //signal(SIGINT, sigint_close_files);
 
     SA_DynamicArray* films = NULL;
     SA_DynamicArray* reviewers = NULL;

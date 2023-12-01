@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <inttypes.h>
 #include "film_stats/filters/min_reviews.h"
+#include "film_stats/filters/limit_date.h"
 #include "film_stats/calculate_stats.h"
 
 
@@ -54,6 +57,15 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
     if(filter_options->min_reviews != -1)
     {
         filter_min_reviews(film_filtered, film_to_filter, reviewers, filter_options->min_reviews);
+        return SA_TRUE;
+    }
+    if(filter_options->limit != NULL)
+    {
+        uint16_t year;
+        uint8_t month, day;
+
+        sscanf(filter_options->limit, "%" SCNu16 "-%" SCNu8 "-%" SCNu8, &year, &month, &day);
+        filter_date_from(film_filtered, film_to_filter, year - YEARS_OFFSET, month, day, SA_FALSE);
         return SA_TRUE;
     }
     return SA_FALSE;

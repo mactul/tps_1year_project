@@ -24,7 +24,7 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
 {
     args_structure->bad_reviewers = NULL;
     args_structure->film_id = -1;
-    args_structure->limit = -1;
+    args_structure->limit = NULL;
     args_structure->min_reviews = -1;
     args_structure->only_reviewers = NULL;
     args_structure->output_folder = NULL;
@@ -45,13 +45,7 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
                 args_structure->output_folder = optarg+i;
                 break;
             case 'l':
-                args_structure->limit = SA_str_to_uint64(optarg+i);
-                if (args_structure->limit == 0)
-                {
-                    SA_print_error("Invalid limit\n");
-                    print_usage();
-                    return false;
-                }
+                args_structure->limit = optarg+i;
                 break;
             case 's':
                 args_structure->film_id = SA_str_to_uint64(optarg+i);

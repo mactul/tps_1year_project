@@ -21,7 +21,7 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
 
     Film film = {.rating_count = 0};
 
-    fscanf(file, "%" PRIu32 ":", &(film.film_id));
+    fscanf(file, "%" SCNu32 ":", &(film.film_id));
 
     SA_DynamicArray* ratings = SA_dynarray_create_size_hint(Rating, EXPECTED_RATINGS_PER_FILM_NUMBER);
     Rating rating;
