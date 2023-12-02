@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
 
     SA_init();
 
+    FILE* file = fopen(out_folder_path, "r");
 
     if (!parse_args(argc, argv, &args_structure, &index_remaining))
     {
@@ -48,7 +49,6 @@ int main(int argc, char* argv[])
     }
 
 
-    FILE* file = fopen(out_folder_path, "r");
     if (file == NULL)
     {
         goto EXIT_LBL;
