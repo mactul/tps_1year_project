@@ -8,7 +8,7 @@
 #include "src/stats_io/writer_stats.h"
 #include "src/arg-handler.h"
 
-#define MAX_OUT_FOLDER_PATH 256
+#define MAX_OUT_FILE_PATH 256
 
 void sigint_close_files(int signum __attribute__((unused)))
 {
@@ -19,8 +19,30 @@ void sigint_close_files(int signum __attribute__((unused)))
 static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const Arguments* filter_options)
 {
     SA_DynamicArray* film_stats = calculate_all_stats(films, reviewers, filter_options);
-    printf("out/stats.bin");
-    write_stats("out/stats.bin", film_stats);
+    char out_file[MAX_OUT_FILE_PATH] = "";
+    const char* default_folder = "out/";
+    uint8_t folder_length = SA_strlen(default_folder);
+
+    if (filter_options->output_folder != NULL)
+    {
+        folder_length = (uint8_t) SA_strlen(filter_options->output_folder);
+        SA_strncpy(out_file, filter_options->output_folder, MAX_OUT_FILE_PATH);
+    }
+    else
+    {
+        SA_strcpy(out_file, default_folder);
+    }
+
+    if (out_file[folder_length - 1] != '/')
+    {
+        folder_length++;
+        out_file[folder_length - 1] = '/';
+    }
+
+    SA_strcpy(&out_file[folder_length], "stats.bin");
+
+    printf("%s", out_file);
+    write_stats(out_file, film_stats);
     SA_dynarray_free(&film_stats);
 }
 
@@ -30,13 +52,11 @@ int main(int argc, char* argv[])
 
     SA_DynamicArray* films = NULL;
     SA_DynamicArray* reviewers = NULL;
-    char out_folder_path[MAX_OUT_FOLDER_PATH] = "out/data.bin";
+    char out_file_path[MAX_OUT_FILE_PATH] = "out/data.bin";
     Arguments args_structure;
     int index_remaining;
 
     SA_init();
-
-    FILE* file = fopen(out_folder_path, "r");
 
     if (!parse_args(argc, argv, &args_structure, &index_remaining))
     {
@@ -45,9 +65,10 @@ int main(int argc, char* argv[])
 
     if(index_remaining < argc)
     {
-        SA_strcpy(out_folder_path, argv[index_remaining]);
+        SA_strncpy(out_file_path, argv[index_remaining], MAX_OUT_FILE_PATH);
     }
 
+    FILE* file = fopen(out_file_path, "r");
 
     if (file == NULL)
     {
