@@ -64,8 +64,8 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
         if(filter_applied)
         {
             SA_dynarray_free(&(film_to_filter_copy.ratings));
-            film_to_filter_copy = *film_filtered;
         }
+        film_to_filter_copy = *film_filtered;
         filter_applied = SA_TRUE;
     }
 
@@ -79,8 +79,8 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
         if(filter_applied)
         {
             SA_dynarray_free(&(film_to_filter_copy.ratings));
-            film_to_filter_copy = *film_filtered;
         }
+        film_to_filter_copy = *film_filtered;
         filter_applied = SA_TRUE;
     }
 
@@ -90,8 +90,8 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
         if(filter_applied)
         {
             SA_dynarray_free(&(film_to_filter_copy.ratings));
-            film_to_filter_copy = *film_filtered;
         }
+        film_to_filter_copy = *film_filtered;
         filter_applied = SA_TRUE;
     }
 
@@ -101,8 +101,8 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
         if(filter_applied)
         {
             SA_dynarray_free(&(film_to_filter_copy.ratings));
-            film_to_filter_copy = *film_filtered;
         }
+        film_to_filter_copy = *film_filtered;
         filter_applied = SA_TRUE;
     }
     

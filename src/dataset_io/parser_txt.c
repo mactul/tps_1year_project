@@ -3,10 +3,6 @@
 #include <SA/memory/dynamic_array.h>
 #include "src/dataset_io/parser_txt.h"
 
-static int compare_ratings(const void* el1, const void* el2)
-{
-    return ((Rating*)el1)->user_id - ((Rating*)el2)->user_id;
-}
 
 int read_movie_file(SA_DynamicArray* films, const char* filename)
 {
@@ -33,8 +29,6 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
         SA_dynarray_append(Rating, ratings, rating);
         film.rating_count++;
     }
-
-    // SA_dynarray_qsort(ratings, compare_ratings);
 
     film.ratings = ratings;
 

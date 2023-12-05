@@ -90,9 +90,9 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
         }
     }
     *arg_rest = optind;
-    if (optind < argc)
+    if (optind < argc-1)
     {
-        SA_print_error("Pas de fichiers fournis\n");
+        SA_print_error("Trop de fichiers fournis\n");
         print_usage();
         return false;
     }

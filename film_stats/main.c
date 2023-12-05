@@ -41,7 +41,6 @@ static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* re
 
     SA_strcpy(&out_file[folder_length], "stats.bin");
 
-    printf("%s", out_file);
     write_stats(out_file, film_stats);
     SA_dynarray_free(&film_stats);
 }
@@ -55,6 +54,7 @@ int main(int argc, char* argv[])
     char out_file_path[MAX_OUT_FILE_PATH] = "out/data.bin";
     Arguments args_structure;
     int index_remaining;
+    FILE* file = NULL;
 
     SA_init();
 
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
         SA_strncpy(out_file_path, argv[index_remaining], MAX_OUT_FILE_PATH);
     }
 
-    FILE* file = fopen(out_file_path, "r");
+    file = fopen(out_file_path, "r");
 
     if (file == NULL)
     {
