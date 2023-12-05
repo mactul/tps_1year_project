@@ -115,7 +115,7 @@ QUIT:
     for (uint64_t i = 0; i < SA_dynarray_size(films); i++)
     {
         Film f = SA_dynarray_get(Film, films, i);
-        SA_dynarray_free(&f.ratings);
+        SA_dynarray_free(&(f.ratings));
     }
     SA_dynarray_free(&films);
     return NULL;
