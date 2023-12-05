@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include "film_stats/filters/min_reviews.h"
 #include "film_stats/filters/limit_date.h"
+#include "film_stats/filters/reviewers_list.h"
 #include "film_stats/calculate_stats.h"
 
 
@@ -54,26 +55,64 @@ static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtere
 
 static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter, const SA_DynamicArray* reviewers, const Arguments* filter_options)
 {
+    Film film_to_filter_copy = *film_to_filter;
+    SA_bool filter_applied = SA_FALSE;
+
     if(filter_options->min_reviews != -1)
     {
-        filter_min_reviews(film_filtered, film_to_filter, reviewers, filter_options->min_reviews);
-        return SA_TRUE;
+        filter_min_reviews(film_filtered, &film_to_filter_copy, reviewers, filter_options->min_reviews);
+        if(filter_applied)
+        {
+            SA_dynarray_free(&(film_to_filter_copy.ratings));
+            film_to_filter_copy = *film_filtered;
+        }
+        filter_applied = SA_TRUE;
     }
+
     if(filter_options->limit != NULL)
     {
         uint16_t year;
         uint8_t month, day;
 
         sscanf(filter_options->limit, "%" SCNu16 "-%" SCNu8 "-%" SCNu8, &year, &month, &day);
-        filter_date_from(film_filtered, film_to_filter, year - YEARS_OFFSET, month, day, SA_FALSE);
-        return SA_TRUE;
+        filter_date_from(film_filtered, &film_to_filter_copy, year - YEARS_OFFSET, month, day, SA_FALSE);
+        if(filter_applied)
+        {
+            SA_dynarray_free(&(film_to_filter_copy.ratings));
+            film_to_filter_copy = *film_filtered;
+        }
+        filter_applied = SA_TRUE;
     }
-    return SA_FALSE;
+
+    if (filter_options->bad_reviewers != NULL)
+    {
+        filter_reviewers(film_filtered, &film_to_filter_copy, filter_options->bad_reviewers, SA_FALSE);
+        if(filter_applied)
+        {
+            SA_dynarray_free(&(film_to_filter_copy.ratings));
+            film_to_filter_copy = *film_filtered;
+        }
+        filter_applied = SA_TRUE;
+    }
+
+    if (filter_options->only_reviewers != NULL)
+    {
+        filter_reviewers(film_filtered, &film_to_filter_copy, filter_options->only_reviewers, SA_TRUE);
+        if(filter_applied)
+        {
+            SA_dynarray_free(&(film_to_filter_copy.ratings));
+            film_to_filter_copy = *film_filtered;
+        }
+        filter_applied = SA_TRUE;
+    }
+    
+    return filter_applied;
 }
 
 SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const Arguments* filter_options)
 {
     SA_DynamicArray* film_stats = SA_dynarray_create_size_hint(FilmStats, EXPECTED_FILM_NUMBERS);
+    printf("%ld\n", SA_dynarray_size(films));
     for(uint64_t i = 0; i < SA_dynarray_size(films); i++)
     {
         Film film_filtered;
