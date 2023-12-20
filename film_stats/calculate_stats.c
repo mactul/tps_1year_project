@@ -4,7 +4,21 @@
 #include "film_stats/filters/limit_date.h"
 #include "film_stats/filters/reviewers_list.h"
 #include "film_stats/calculate_stats.h"
+#include "src/recommendation/recommendation.h"
+#include "src/recommendation/parse_liked_films.h"
 
+static inline int cmp_recommendations(const void* e1, const void* e2)
+{
+    if(((FilmStats*)e1)->recommendation < ((FilmStats*)e2)->recommendation)
+    {
+        return 1;
+    }
+    else if(((FilmStats*)e1)->recommendation > ((FilmStats*)e2)->recommendation)
+    {
+        return -1;
+    }
+    return 0;
+}
 
 static uint32_t get_max_year(SA_DynamicArray* ratings)
 {
@@ -20,8 +34,10 @@ static uint32_t get_max_year(SA_DynamicArray* ratings)
     return (uint32_t)max_year_offset + YEARS_OFFSET;
 }
 
-static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtered)
+static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtered, const SA_DynamicArray* reviewers, const SA_DynamicArray* liked_films)
 {
+    uint64_t note_sum = 0;
+    uint64_t nb_note = 0;
     uint64_t sum_ratings[NUMBER_OF_YEARS_LOGGED_IN_STATS] = {0};
     FilmStats stats = {0};
 
@@ -37,6 +53,9 @@ static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtere
         }
         sum_ratings[year_index] += rating.note;
         stats.kept_rating_count_over_years[year_index]++;
+
+        note_sum += rating.note;
+        nb_note++;
     }
     for(int i = 0; i < NUMBER_OF_YEARS_LOGGED_IN_STATS; i++)
     {
@@ -49,6 +68,8 @@ static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtere
             stats.mean_rating_over_years[i] = (float)sum_ratings[i] / (float)stats.kept_rating_count_over_years[i];
         }
     }
+
+    stats.recommendation = calculate_recommendation(film_filtered, liked_films, (double)note_sum / (double)nb_note, reviewers);
 
     SA_dynarray_append(FilmStats, film_stats, stats);
 }
@@ -112,19 +133,27 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
 SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const Arguments* filter_options)
 {
     SA_DynamicArray* film_stats = SA_dynarray_create_size_hint(FilmStats, EXPECTED_FILM_NUMBERS);
+    SA_DynamicArray* liked_films = parse_liked_films(filter_options->liked_films_filepath, films);
     for(uint64_t i = 0; i < SA_dynarray_size(films); i++)
     {
         Film film_filtered;
         if(apply_all_filters(&film_filtered, _SA_dynarray_get_element_ptr(films, i), reviewers, filter_options))
         {
-            add_film_stats(film_stats, &film_filtered);
+            add_film_stats(film_stats, &film_filtered, reviewers, liked_films);
             SA_dynarray_free(&(film_filtered.ratings));
         }
         else
         {
-            add_film_stats(film_stats, _SA_dynarray_get_element_ptr(films, i));
+            add_film_stats(film_stats, _SA_dynarray_get_element_ptr(films, i), reviewers, liked_films);
+        }
+        if(i % (SA_dynarray_size(films) / 100) == 0)
+        {
+            printf("%d%%\n", 100 * (int)i / (int)SA_dynarray_size(films));
         }
     }
+    SA_dynarray_free(&liked_films);
+
+    SA_dynarray_qsort(film_stats, cmp_recommendations);
 
     return film_stats;
 }
