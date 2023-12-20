@@ -11,6 +11,7 @@
 #define EXPECTED_MAX_USER_ID 2700000
 #define EXPECTED_FILM_NUMBERS 18000
 #define EXPECTED_RATINGS_PER_FILM_NUMBER 256
+#define MAX_FILM_NAME_SIZE 256
 
 typedef struct _reviewer {
     uint16_t rate_count;
@@ -22,6 +23,11 @@ typedef struct _film {
     uint32_t rating_count;
     SA_DynamicArray* ratings;
 } Film;
+
+typedef struct _film_info {
+    uint16_t year;
+    char name[MAX_FILM_NAME_SIZE];
+} FilmInfo;
 
 typedef struct _rating {
     uint32_t user_id;

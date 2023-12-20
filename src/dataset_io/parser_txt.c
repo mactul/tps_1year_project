@@ -4,6 +4,8 @@
 #include <SA/strings/strings.h>
 #include "src/dataset_io/parser_txt.h"
 
+#define BUFFER_SIZE 256
+
 
 static int compare_ratings(const void* el1, const void* el2)
 {
@@ -28,7 +30,7 @@ static uint64_t next_number(char** line_to_destroy)
     return result;
 }
 
-static void parse_line(char* line_to_destroy, Rating* rating)
+static void parse_rating_line(char* line_to_destroy, Rating* rating)
 {
     uint16_t year;
 
@@ -40,13 +42,40 @@ static void parse_line(char* line_to_destroy, Rating* rating)
     rating->day = next_number(&line_to_destroy);
 }
 
+static uint32_t parse_movie_line(char* line_to_destroy, FilmInfo* film_info)
+{
+    uint32_t film_id = next_number(&line_to_destroy);
+    int i = 0;
+    if(SA_startswith_case_unsensitive(line_to_destroy, "NULL"))
+    {
+        film_info->year = 0;
+        while(*line_to_destroy != ',')
+        {
+            line_to_destroy++;
+        }
+        line_to_destroy++;
+    }
+    else
+    {
+        film_info->year = next_number(&line_to_destroy);
+    }
+    while(i < MAX_FILM_NAME_SIZE-1 && *line_to_destroy != '\n' && *line_to_destroy != '\r' && *line_to_destroy != '\0')
+    {
+        film_info->name[i] = *line_to_destroy;
+        i++;
+        line_to_destroy++;
+    }
+    film_info->name[i] = '\0';
+
+    return film_id;
+}
 
 int read_movie_file(SA_DynamicArray* films, const char* filename)
 {
     int i = 0;
     int error_code = 0;
     Rating rating;
-    char buffer[256];
+    char buffer[BUFFER_SIZE];
     Film film = {.rating_count = 0};
     SA_DynamicArray* ratings = NULL;
     FILE* file = fopen(filename, "r");
@@ -57,7 +86,7 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
         goto QUIT;
     }
 
-    fgets(buffer, 256, file);
+    fgets(buffer, BUFFER_SIZE, file);
 
     while(SA_CHAR_IS_DIGIT(buffer[i]))
     {
@@ -69,9 +98,9 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
 
     ratings = SA_dynarray_create_size_hint(Rating, EXPECTED_RATINGS_PER_FILM_NUMBER);
     
-    while (fgets(buffer, 256, file) != NULL)
+    while (fgets(buffer, BUFFER_SIZE, file) != NULL)
     {
-        parse_line(buffer, &rating);
+        parse_rating_line(buffer, &rating);
         SA_dynarray_append(Rating, ratings, rating);
         film.rating_count++;
     }
@@ -85,4 +114,29 @@ int read_movie_file(SA_DynamicArray* films, const char* filename)
 QUIT:
     fclose(file);
     return error_code;
+}
+
+SA_DynamicArray* get_films_infos(const char* movie_titles_filepath)
+{
+    char buffer[BUFFER_SIZE];
+    SA_DynamicArray* films_infos = NULL;
+    FILE* file = fopen(movie_titles_filepath, "r");
+
+    if(file == NULL)
+    {
+        return NULL;
+    }
+
+    films_infos = SA_dynarray_create_size_hint(FilmInfo, EXPECTED_FILM_NUMBERS);
+
+    while (fgets(buffer, BUFFER_SIZE, file) != NULL)
+    {
+        FilmInfo film_info;
+        uint32_t film_id = parse_movie_line(buffer, &film_info);
+        SA_dynarray_set(FilmInfo, films_infos, film_id, film_info);
+    }
+
+    fclose(file);
+
+    return films_infos;
 }

@@ -40,6 +40,17 @@ static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* re
         out_file[folder_length - 1] = '/';
     }
 
+    SA_DynamicArray* films_infos = get_films_infos("download/movie_titles.txt");
+
+    for(int i = 0; i < 20; i++)
+    {
+        FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats, i);
+        FilmInfo info = SA_dynarray_get(FilmInfo, films_infos, fstats->film_id);
+        printf("%s\n", info.name);
+    }
+
+    SA_dynarray_free(&films_infos);
+
     SA_strcpy(&out_file[folder_length], "stats.bin");
 
     write_stats(out_file, film_stats);
