@@ -6,33 +6,33 @@
 void print_usage(void)
 {
     puts(
-        "Prog, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"
-        "Utilisation: ./prog [options] <fichier_binaire>\n\n"
+        "film_stats, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"
+        "Usage: ./film_stats [options] <data_binary_file>\n\n"
         "Options:\n"
-        "-h\t\t\tAfficher cette aide\n"
-        "-f DOSSIER\t\tDéfinir DOSSIER comme dossier de sortie\n"
-        "-l LIMITE\t\tNe prendre en compte que les avis crées avant LIMITE\n"
-        "-s FILM_ID\t\tDonner des statistiques sur le film avec l'identifiant FILM_ID\n"
-        "-c \"X, Y\"\t\tNe prendre en compte que les avis des clients X, Y\n"
-        "-b \"X, Y\"\t\tNe pas prendre en compte les avis des clients X, Y\n"
-        "-e MIN\t\t\tNe prendre en compte que les avis de clients ayant vu plus de MIN films\n"
-        "-t TIMEOUT\t\tDéfinir TIMEOUT comme temps d'exécution maximum"
+        "-h\t\t\tDisplay this help\n"
+        "-f FOLDER\t\tDefines the output folder for the stats.bin file\n"
+        "-l DATE_LIMIT\t\tOnly take into account reviews created before DATE_LIMIT\n"
+        "-c \"X, Y\"\t\tOnly take into account the opinions of reviewers X, Y\n"
+        "-b \"X, Y\"\t\tNot taking into account the opinions of reviewers X, Y\n"
+        "-e MIN\t\tOnly take into account reviews from reviewers who have seen more than MIN films\n"
+        "-r FILEPATH\t\tMake recommendations with a file containing the list of film IDs you like\n"
+        //"-t TIMEOUT\t\tDefine TIMEOUT as the maximum execution time in seconds\n"
     );
 }
 
 bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest)
 {
     args_structure->bad_reviewers = NULL;
-    args_structure->film_id = -1;
     args_structure->limit = NULL;
     args_structure->min_reviews = -1;
     args_structure->only_reviewers = NULL;
     args_structure->output_folder = NULL;
     args_structure->timeout_milli = -1;
+    args_structure->liked_films_filepath = NULL;
 
     int c;
     opterr = 0;
-    while ((c = getopt(argc, argv, "f:l:s:c:b:e:t:h")) != -1)
+    while ((c = getopt(argc, argv, "f:l:s:c:b:e:t:r:h")) != -1)
     {
         int i = 0;
         while(optarg[i] == ' ')
@@ -47,20 +47,14 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
             case 'l':
                 args_structure->limit = optarg+i;
                 break;
-            case 's':
-                args_structure->film_id = SA_str_to_uint64(optarg+i);
-                if (args_structure->film_id == 0 && SA_get_last_error() == SA_ERROR_NAN)
-                {
-                    SA_print_error("Invalid film ID\n");
-                    print_usage();
-                    return false;
-                }
-                break;
             case 'c':
                 args_structure->only_reviewers = optarg+i;
                 break;
             case 'b':
                 args_structure->bad_reviewers = optarg+i;
+                break;
+            case 'r':
+                args_structure->liked_films_filepath = optarg+i;
                 break;
             case 'e':
                 args_structure->min_reviews = SA_str_to_uint64(optarg+i);

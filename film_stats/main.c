@@ -7,6 +7,7 @@
 #include "src/dataset_io/writer_bin.h"
 #include "src/stats_io/writer_stats.h"
 #include "src/arg-handler.h"
+#include "src/recommendation/recommendation.h"
 
 #define MAX_OUT_FILE_PATH 256
 
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
 
     SA_DynamicArray* films = NULL;
     SA_DynamicArray* reviewers = NULL;
-    char out_file_path[MAX_OUT_FILE_PATH] = "out/data.bin";
+    char in_file_path[MAX_OUT_FILE_PATH] = "out/data.bin";
     Arguments args_structure;
     int index_remaining;
     FILE* file = NULL;
@@ -65,10 +66,10 @@ int main(int argc, char* argv[])
 
     if(index_remaining < argc)
     {
-        SA_strncpy(out_file_path, argv[index_remaining], MAX_OUT_FILE_PATH);
+        SA_strncpy(in_file_path, argv[index_remaining], MAX_OUT_FILE_PATH);
     }
 
-    file = fopen(out_file_path, "r");
+    file = fopen(in_file_path, "r");
 
     if (file == NULL)
     {
@@ -89,6 +90,11 @@ int main(int argc, char* argv[])
 
     create_stats(films, reviewers, &args_structure);
 
+    printf("distance between Harry Potter II  & Harry Potter II : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 11443), reviewers));
+    printf("distance between Harry Potter II  & Harry Potter I  : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 17627), reviewers));
+    printf("distance between Harry Potter II  & Star Wars IV    : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 16265), reviewers));
+    printf("distance between Star Wars V      & Star Wars IV    : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 5582), _SA_dynarray_get_element_ptr(films, 16265), reviewers));
+    printf("distance between Fast and Furious & Amelie          : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 6844), _SA_dynarray_get_element_ptr(films, 6029), reviewers));
 
 EXIT_LBL:
     if(file != NULL)

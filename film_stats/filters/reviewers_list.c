@@ -23,7 +23,7 @@ static SA_bool cdegdechggfe(SA_DynamicArray* user_ids, uint32_t user_id)
     return SA_FALSE;
 }
 
-void filter_user_id(Film* film_filtered, const Film* film_to_filter, SA_DynamicArray* user_ids, SA_bool whitelist_mode)
+static void filter_user_ids(Film* film_filtered, const Film* film_to_filter, SA_DynamicArray* user_ids, SA_bool whitelist_mode)
 {
     uint32_t rating_count = film_to_filter->rating_count;
     for (uint32_t i = 0; i < rating_count; i++)
@@ -69,7 +69,7 @@ void filter_reviewers(Film* film_filtered, const Film* film_to_filter, const cha
         token = strtok(NULL, ",");
     }
 
-    filter_user_id(film_filtered, film_to_filter, user_ids, whitelist_mode);
+    filter_user_ids(film_filtered, film_to_filter, user_ids, whitelist_mode);
 
     SA_free(&reviewers_copy);
     SA_dynarray_free(&user_ids);

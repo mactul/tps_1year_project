@@ -112,7 +112,6 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
 SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const Arguments* filter_options)
 {
     SA_DynamicArray* film_stats = SA_dynarray_create_size_hint(FilmStats, EXPECTED_FILM_NUMBERS);
-    printf("%ld\n", SA_dynarray_size(films));
     for(uint64_t i = 0; i < SA_dynarray_size(films); i++)
     {
         Film film_filtered;

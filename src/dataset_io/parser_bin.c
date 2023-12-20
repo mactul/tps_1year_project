@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include "src/dataset_io/parser_bin.h"
 
+typedef struct _bin_reviewer {
+    uint32_t user_id;
+    uint16_t rate_count;
+    uint16_t avg_note;
+} BinReviewer;
+
 SA_DynamicArray* read_all_reviewers(FILE* file)
 {
     SA_DynamicArray* reviewers = NULL;
@@ -20,17 +26,23 @@ SA_DynamicArray* read_all_reviewers(FILE* file)
         goto ERROR;
     }
 
-    reviewers = SA_dynarray_create_size_hint(Reviewer, reviewer_count + 1);
+    reviewers = SA_dynarray_create_size_hint(Reviewer, EXPECTED_MAX_USER_ID);
+    SA_activate_zero_filling(reviewers);
 
+    BinReviewer br;
+    uint32_t counter = 0;
     for (uint64_t i = 0; i < reviewer_count; i++)
     {
         Reviewer r;
-        if (fread(&r, sizeof(Reviewer), 1, file) <= 0)
+        if (fread(&br, sizeof(BinReviewer), 1, file) <= 0)
         {
             error_code = 1;
             goto ERROR;
         }
-        SA_dynarray_append(Reviewer, reviewers, r);
+        r.avg_note = br.avg_note;
+        r.rate_count = br.rate_count;
+        SA_dynarray_set(Reviewer, reviewers, br.user_id, r);
+        counter++;
     }
 
 ERROR:

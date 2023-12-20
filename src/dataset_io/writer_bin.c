@@ -2,6 +2,11 @@
 #include <SA/SA.h>
 #include "writer_bin.h"
 
+typedef struct _user_data {
+    uint32_t rating_count;
+    uint32_t sum_note;
+} UserData;
+
 static int write_users(FILE* file, SA_DynamicArray* films)
 {
     int error_code = 0;
@@ -11,28 +16,34 @@ static int write_users(FILE* file, SA_DynamicArray* films)
         return 6;
     }
 
-    SA_DynamicArray* user_rate_count = SA_dynarray_create_size_hint(uint32_t, EXPECTED_REVIEWER_NUMBERS);
+    SA_DynamicArray* user_datas = SA_dynarray_create_size_hint(UserData, EXPECTED_MAX_USER_ID);
 
-    SA_activate_zero_filling(user_rate_count);
+    SA_activate_zero_filling(user_datas);
 
     uint64_t user_count = 0;
-
+    uint32_t max_user_id = 0;
     for (uint32_t i = 0; i < (uint32_t) SA_dynarray_size(films); i++)
     {
         Film f = SA_dynarray_get(Film, films, i);
         for (uint32_t j = 0; j < (uint32_t) SA_dynarray_size(f.ratings); j++)
         {
             Rating rating = SA_dynarray_get(Rating, f.ratings, j);
-            uint32_t rate_count = 0;
-            if (SA_dynarray_size(user_rate_count) > rating.user_id)
+            UserData data = {.rating_count = 0, .sum_note = 0};
+            if (SA_dynarray_size(user_datas) > rating.user_id)
             {
-                rate_count = SA_dynarray_get(uint32_t, user_rate_count, rating.user_id);
+                data = SA_dynarray_get(UserData, user_datas, rating.user_id);
             }
-            if (rate_count == 0)
+            if (data.rating_count == 0)
             {
                 user_count++;
             }
-            SA_dynarray_set(uint32_t, user_rate_count, rating.user_id, rate_count + 1);
+            data.rating_count++;
+            data.sum_note += rating.note;
+            SA_dynarray_set(UserData, user_datas, rating.user_id, data);
+            if(rating.user_id > max_user_id)
+            {
+                max_user_id = rating.user_id;
+            }
         }
     }
 
@@ -44,10 +55,12 @@ static int write_users(FILE* file, SA_DynamicArray* films)
 
     // User id are naturally sorted because they are arranged in the array by indexes.
 
-    for (uint32_t i = 0; i < SA_dynarray_size(user_rate_count); i++)
+    for (uint32_t i = 0; i < SA_dynarray_size(user_datas); i++)
     {
-        uint32_t count = SA_dynarray_get(uint32_t, user_rate_count, i);
-        if (count == 0)
+        UserData data = SA_dynarray_get(UserData, user_datas, i);
+        uint16_t count = (uint16_t)data.rating_count;
+        uint16_t avg_note = (uint16_t)((double)data.sum_note * (double)((uint16_t)(-1)) / (double)data.rating_count / 5.0 + 0.5);
+        if (data.rating_count == 0)
         {
             continue;
         }
@@ -61,10 +74,15 @@ static int write_users(FILE* file, SA_DynamicArray* films)
             error_code = 2;
             goto QUIT;
         }
+        if (fwrite(&avg_note, sizeof(avg_note), 1, file) <= 0)
+        {
+            error_code = 2;
+            goto QUIT;
+        }
     }
 
 QUIT:
-    SA_dynarray_free(&user_rate_count);
+    SA_dynarray_free(&user_datas);
     return error_code;
 }
 

@@ -8,12 +8,13 @@
 #define YEARS_OFFSET 1850
 
 #define EXPECTED_REVIEWER_NUMBERS 500000
+#define EXPECTED_MAX_USER_ID 2700000
 #define EXPECTED_FILM_NUMBERS 18000
 #define EXPECTED_RATINGS_PER_FILM_NUMBER 256
 
 typedef struct _reviewer {
-    uint32_t user_id;
-    uint32_t rate_count;
+    uint16_t rate_count;
+    uint16_t avg_note;
 } Reviewer;
 
 typedef struct _film {
@@ -31,9 +32,9 @@ typedef struct _rating {
 } Rating;
 
 typedef struct _arguments {
-    int32_t film_id;
     int32_t min_reviews;
     int32_t timeout_milli;
+    const char* liked_films_filepath;
     const char* limit;
     const char* output_folder;
     const char* only_reviewers;
