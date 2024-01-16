@@ -148,7 +148,7 @@ SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_Dyna
         }
         if(i % (SA_dynarray_size(films) / 100) == 0)
         {
-            printf("%d%%\n", 100 * (int)i / (int)SA_dynarray_size(films));
+            printf("%d%%\n\033[A\r", 100 * (int)i / (int)SA_dynarray_size(films));
         }
     }
     SA_dynarray_free(&liked_films);
