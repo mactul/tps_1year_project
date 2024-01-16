@@ -17,6 +17,7 @@ target("film_stats")
     add_files("film_stats/**.c")
     add_rules("flags_extras")
     add_links("sa")
+    add_links("m")
     add_cxflags("-pedantic", "-O3")
 
 target("film_parser")
