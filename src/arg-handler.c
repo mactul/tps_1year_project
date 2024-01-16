@@ -7,14 +7,14 @@ void print_usage(void)
 {
     puts(
         "film_stats, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"
-        "Usage: ./film_stats [options] <data_binary_file>\n\n"
+        "Usage: ./film_stats [options] [data_binary_file]\n\n"
         "Options:\n"
         "-h\t\t\tDisplay this help\n"
         "-f FOLDER\t\tDefines the output folder for the stats.bin file\n"
         "-l DATE_LIMIT\t\tOnly take into account reviews created before DATE_LIMIT\n"
         "-c \"X, Y\"\t\tOnly take into account the opinions of reviewers X, Y\n"
         "-b \"X, Y\"\t\tNot taking into account the opinions of reviewers X, Y\n"
-        "-e MIN\t\tOnly take into account reviews from reviewers who have seen more than MIN films\n"
+        "-e MIN\t\t\tOnly take into account reviews from reviewers who have seen more than MIN films\n"
         "-r FILEPATH\t\tMake recommendations with a file containing the list of film IDs you like\n"
         //"-t TIMEOUT\t\tDefine TIMEOUT as the maximum execution time in seconds\n"
         "-g\t\t\tUse the graphical user interface\n"
