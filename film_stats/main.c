@@ -42,11 +42,11 @@ static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* re
 
     SA_DynamicArray* films_infos = get_films_infos("download/movie_titles.txt");
 
-    for(int i = 0; i < 20; i++)
+    for(int i = 0; i < 40; i++)
     {
         FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats, i);
         FilmInfo info = SA_dynarray_get(FilmInfo, films_infos, fstats->film_id);
-        printf("%s\n", info.name);
+        printf("%d : %s\n", fstats->film_id, info.name);
     }
 
     SA_dynarray_free(&films_infos);
@@ -101,12 +101,7 @@ int main(int argc, char* argv[])
 
     create_stats(films, reviewers, &args_structure);
 
-    printf("distance between Harry Potter II  & Harry Potter II : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 11443), reviewers));
-    printf("distance between Harry Potter II  & Harry Potter I  : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 17627), reviewers));
-    printf("distance between Harry Potter II  & Star Wars IV    : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 16265), reviewers));
-    printf("distance between Star Wars V      & Star Wars IV    : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 5582), _SA_dynarray_get_element_ptr(films, 16265), reviewers));
-    printf("distance between Fast and Furious & Amelie          : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 6844), _SA_dynarray_get_element_ptr(films, 6029), reviewers));
-
+    
 EXIT_LBL:
     if(file != NULL)
     {
