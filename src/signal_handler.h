@@ -5,7 +5,7 @@
 
 extern volatile sig_atomic_t _interruption_requested;
 
-static void sigint_handler(int unused __attribute__((unused)))
+static inline void sigint_handler(int __attribute__((unused)) sig_id)
 {
     _interruption_requested = 1;
 }

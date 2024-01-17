@@ -7,16 +7,15 @@ void print_usage(void)
 {
     puts(
         "film_stats, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"
-        "Usage: ./film_stats [options] [data_binary_file]\n\n"
+        "Usage: ./film_stats <movie_titles_file> [data_binary_file] [options]\n\n"
         "Options:\n"
         "-h\t\t\tDisplay this help\n"
-        "-f FOLDER\t\tDefines the output folder for the stats.bin file\n"
+        "-f FOLDER\t\tDefines the output folder for the film_stats.bin file\n"
         "-l DATE_LIMIT\t\tOnly take into account reviews created before DATE_LIMIT\n"
         "-c \"X, Y\"\t\tOnly take into account the opinions of reviewers X, Y\n"
         "-b \"X, Y\"\t\tNot taking into account the opinions of reviewers X, Y\n"
         "-e MIN\t\t\tOnly take into account reviews from reviewers who have seen more than MIN films\n"
         "-r FILEPATH\t\tMake recommendations with a file containing the list of film IDs you like\n"
-        //"-t TIMEOUT\t\tDefine TIMEOUT as the maximum execution time in seconds\n"
         "-g\t\t\tUse the graphical user interface\n"
     );
 }
@@ -28,13 +27,12 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
     args_structure->min_reviews = -1;
     args_structure->only_reviewers = NULL;
     args_structure->output_folder = NULL;
-    args_structure->timeout_milli = -1;
     args_structure->liked_films_filepath = NULL;
     args_structure->use_graphics = SA_FALSE;
 
     int c;
     opterr = 0;
-    while ((c = getopt(argc, argv, "f:l:s:c:b:e:t:r:gh")) != -1)
+    while ((c = getopt(argc, argv, "f:l:s:c:b:e:r:gh")) != -1)
     {
         switch(c)
         {
@@ -62,15 +60,6 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
                     return false;
                 }
                 break;
-            case 't':
-                args_structure->timeout_milli = SA_str_to_uint64(optarg);
-                if (args_structure->timeout_milli == 0)
-                {
-                    SA_print_error("Invalid timeout\n");
-                    print_usage();
-                    return false;
-                }
-                break;
             case 'g':
                 args_structure->use_graphics = SA_TRUE;
                 break;
@@ -84,9 +73,16 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
         }
     }
     *arg_rest = optind;
-    if (optind < argc-1)
+
+    if(optind == argc)
     {
-        SA_print_error("Trop de fichiers fournis\n");
+        SA_print_error("You must specify the file path for the movie_titles.txt file\n\n");
+        print_usage();
+        return false;
+    }
+    if (optind < argc-2)
+    {
+        SA_print_error("Too many files passed\n\n");
         print_usage();
         return false;
     }

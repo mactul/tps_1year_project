@@ -13,6 +13,9 @@
 #define EXPECTED_RATINGS_PER_FILM_NUMBER 256
 #define MAX_FILM_NAME_SIZE 256
 
+#define DEFAULT_DATA_FOLDER "data/"
+#define DEFAULT_FILMS_DATA_FILE DEFAULT_DATA_FOLDER "films_data.bin"
+
 typedef struct _reviewer {
     uint16_t rate_count;
     uint16_t avg_note;
@@ -39,7 +42,6 @@ typedef struct _rating {
 
 typedef struct _arguments {
     int32_t min_reviews;
-    int32_t timeout_milli;
     SA_bool use_graphics;
     const char* liked_films_filepath;
     const char* limit;

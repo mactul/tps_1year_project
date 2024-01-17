@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     signal(SIGINT, sigint_handler);
 
     SA_DynamicArray* films = NULL;
-    char out_folder_path[MAX_OUT_FOLDER_PATH] = "out/data.bin";
+    char out_folder_path[MAX_OUT_FOLDER_PATH] = DEFAULT_FILMS_DATA_FILE;
 
     SA_init();
 
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 
     if (i < argc - 1)
     {
-        printf("Interrupted by user\n");
+        printf("\nParsing aborted, file untouched\n");
         goto EXIT_LBL;
     }
 
