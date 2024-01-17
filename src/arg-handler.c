@@ -17,7 +17,6 @@ void print_usage()
         "-b \"X, Y\"\t\tNot taking into account the opinions of reviewers X, Y\n"
         "-e MIN\t\t\tOnly take into account reviews from reviewers who have seen more than MIN films\n"
         "-r FILEPATH\t\tMake recommendations with a file containing the list of film IDs you like\n"
-        "-g\t\t\tUse the graphical user interface\n"
     );
 }
 
@@ -35,7 +34,6 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
     args_structure->only_reviewers = NULL;
     args_structure->output_folder = NULL;
     args_structure->liked_films_filepath = NULL;
-    args_structure->use_graphics = SA_FALSE;
 
     int c;
     opterr = 0;
@@ -66,9 +64,6 @@ bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest
                     print_usage();
                     return false;
                 }
-                break;
-            case 'g':
-                args_structure->use_graphics = SA_TRUE;
                 break;
             case 'h':
                 print_usage();

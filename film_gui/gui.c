@@ -1,4 +1,4 @@
-#include "film_stats/gui.h"
+#include "film_gui/gui.h"
 #include <SA/SA.h>
 #include <stdio.h>
 #include <string.h>

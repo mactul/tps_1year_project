@@ -2,7 +2,6 @@
 #include <SA/SA.h>
 #include <signal.h>
 #include "film_stats/calculate_stats.h"
-#include "film_stats/gui.h"
 #include "src/dataset_io/parser_txt.h"
 #include "src/dataset_io/parser_bin.h"
 #include "src/dataset_io/writer_bin.h"
@@ -141,11 +140,6 @@ int main(int argc, char* argv[])
     printf("distance between Harry Potter II  & Star Wars IV    : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 16265), reviewers));
     printf("distance between Star Wars V      & Star Wars IV    : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 5582), _SA_dynarray_get_element_ptr(films, 16265), reviewers));
     printf("distance between Fast and Furious & Amelie          : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 6844), _SA_dynarray_get_element_ptr(films, 6029), reviewers));
-
-    if (args_structure.use_graphics)
-    {
-        start_gui();
-    }
 
 EXIT_LBL:
     if(file != NULL)
