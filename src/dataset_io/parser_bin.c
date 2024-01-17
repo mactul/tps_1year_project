@@ -7,6 +7,9 @@ typedef struct _bin_reviewer {
     uint16_t avg_note;
 } BinReviewer;
 
+/// @brief Read all reviewers from binary file
+/// @param file Pointer to the binary file
+/// @return Array of structures containing every user_id, number of ratings and average rating for this user_id or NULL if there was an error
 SA_DynamicArray* read_all_reviewers(FILE* file)
 {
     SA_DynamicArray* reviewers = NULL;
@@ -54,6 +57,9 @@ ERROR:
     return NULL;
 }
 
+/// @brief Read all movies from binary file
+/// @param file Pointer to the binary file
+/// @return Array of structures containing every film_id, number of ratings and all the ratings for this film_id or NULL if there was an error
 SA_DynamicArray* read_all_films(FILE* file)
 {
     int error_code = 0;

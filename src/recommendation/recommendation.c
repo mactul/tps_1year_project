@@ -7,11 +7,19 @@
 
 #define NOTE_IMPACT 0.05
 
+/// @brief Compare doubles (used by qsort)
+/// @param e1 Pointer to the first double
+/// @param e2 Pointer to the second double
+/// @return > 0 if the first double is higher than the second, < 0 if the second one is higher, 0 if they are equal
 static inline int cmp_doubles(const void* e1, const void* e2)
 {
     return *((double*)e1) - *((double*)e2);
 }
 
+/// @brief Normalize a rating from a user
+/// @param note A rating from a user
+/// @param avg_note The average rating for this user
+/// @return The rating normalized according to the averating for a user
 static double normalize_note(double note, double avg_note)
 {
     avg_note = avg_note / (double)((uint16_t)-1);
@@ -19,6 +27,11 @@ static double normalize_note(double note, double avg_note)
     return ((note / 5.0) / avg_note) / 5.0;
 }
 
+/// @brief Get the distance between two movies according to their ratings
+/// @param film1 Pointer to the first movie
+/// @param film2 Pointer to the second movie
+/// @param reviewers Array of structures containing the number of ratings and average rating for every user
+/// @return A value in the range [0-1], 0 means the films are equivalent, near 1 means they are complete opposites, 1 means at least one of the movies has no review 
 double distance_between_films(const Film* film1, const Film* film2, const SA_DynamicArray* reviewers)
 {
     double ratings_taken = 0.0;
@@ -51,9 +64,19 @@ double distance_between_films(const Film* film1, const Film* film2, const SA_Dyn
             i2++;
         }
     }
+    if (ratings_taken == 0.0)
+    {
+        return 1.0;
+    }
     return distance_sum / (ratings_taken);
 }
 
+/// @brief Get the score of a specific film according to all the liked films and its ratings
+/// @param film Pointer to the film
+/// @param liked_films Array of liked films
+/// @param avg_film_note Average rating of this movie
+/// @param reviewers Array of structures containing the number of ratings and average rating for each user
+/// @return The score [0-1] of this film, 1 means it has the highest recommendation, 0 means it has the lowest
 double calculate_recommendation(const Film* film, const SA_DynamicArray* liked_films, double avg_film_note, const SA_DynamicArray* reviewers)
 {
     if(liked_films == NULL || SA_dynarray_size(liked_films) == 0)

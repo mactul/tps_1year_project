@@ -1,6 +1,9 @@
 #include "src/stats_io/parser_stats.h"
 #include "src/data_structs.h"
 
+/// @brief Read film stats from a binary file
+/// @param file File pointer to this file
+/// @return Array containing all the stats if the file was read correctly, else NULL
 SA_DynamicArray* read_stats(FILE* file)
 {
     int error_code = 0;

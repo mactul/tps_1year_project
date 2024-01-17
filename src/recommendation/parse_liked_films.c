@@ -4,6 +4,9 @@
 
 #define BUFFER_SIZE 256
 
+/// @brief Find the first occurence of a number in a string
+/// @param line_to_destroy The string in which we want to find a number
+/// @return Pointer to the string right before this number with a NULL character right after the number
 static char* get_number_in_line(char* line_to_destroy)
 {
     int i = 0;
@@ -20,7 +23,10 @@ static char* get_number_in_line(char* line_to_destroy)
     return line_to_destroy;
 }
 
-
+/// @brief Find a film by film_id (dichotomy)
+/// @param films Array of film structures
+/// @param film_id The id to find
+/// @return Pointer to this film if it exists, else NULL
 static Film* get_film(const SA_DynamicArray* films, uint32_t film_id)
 {
     uint32_t min_index = 0;
@@ -47,7 +53,10 @@ static Film* get_film(const SA_DynamicArray* films, uint32_t film_id)
     return NULL;
 }
 
-
+/// @brief Parse liked films from a text file
+/// @param liked_films_filepath File path to this text file
+/// @param films Array of existing films
+/// @return Array of existing liked films if the file exists, else NULL
 SA_DynamicArray* parse_liked_films(const char* liked_films_filepath, const SA_DynamicArray* films)
 {
     char buffer[BUFFER_SIZE];

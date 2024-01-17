@@ -12,12 +12,19 @@
 
 #define MAX_FILENAME_SIZE 256
 
+/// @brief Signal handler for Ctrl+C
+/// @param signum Signal number
 void sigint_close_files(int signum __attribute__((unused)))
 {
     printf("Attendez une minute, c'est bientôt fini\n");
     return;
 }
 
+/// @brief Create and write stats for all the movies
+/// @param films Array containing all the movies
+/// @param reviewers Array of structures containing the number of ratings and average rating for each user
+/// @param filter_options Pointer to a structure containing all the filters to use
+/// @param movie_title_filepath File path of the movie_titles.txt file
 static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const Arguments* filter_options, const char* movie_title_filepath)
 {
     SA_DynamicArray* film_stats = calculate_all_stats(films, reviewers, filter_options);
@@ -67,9 +74,18 @@ FREE:
     SA_dynarray_free(&film_stats);
 }
 
+/// @brief The program generates statistics from a binary file and displays the best matches
+/// @return 
+/// * 0 if everything went correctly
+/// * 1 if there was a memory allocation error
+/// * 2 if the binary file doesn't exist
+/// * 3 if the command line arguments are incorrect
+/// * 4 if the user cancelled the program (not yet implemented)
 int main(int argc, char* argv[])
 {
     //signal(SIGINT, sigint_close_files);
+
+    int exit_code = 0;
 
     SA_DynamicArray* films = NULL;
     SA_DynamicArray* reviewers = NULL;
@@ -83,6 +99,7 @@ int main(int argc, char* argv[])
 
     if (!parse_args(argc, argv, &args_structure, &index_remaining))
     {
+        exit_code = 3;
         goto EXIT_LBL;
     }
 
@@ -99,16 +116,19 @@ int main(int argc, char* argv[])
     if (file == NULL)
     {
         fprintf(stderr, "Data file has not been generated, please run film_parser\n");
+        exit_code = 2;
         goto EXIT_LBL;
     }
     films = read_all_films(file);
     if (films == NULL)
     {
+        exit_code = 1;
         goto EXIT_LBL;
     }
     reviewers = read_all_reviewers(file);
     if(reviewers == NULL)
     {
+        exit_code = 1;
         goto EXIT_LBL;
     }
     fclose(file);

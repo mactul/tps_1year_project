@@ -7,13 +7,20 @@ typedef struct _user_data {
     uint32_t sum_note;
 } UserData;
 
+/// @brief Write all the Ratings to a binary file
+/// @param file File pointer to this file
+/// @param films Array of structures containing the film_id, number of ratings and array of ratings for every movie (in which we get Ratings structures)
+/// @return
+/// * 0 if everything went correctly
+/// * 2 if writing was not possible
+/// * 3 if the films array is NULL
 static int write_users(FILE* file, SA_DynamicArray* films)
 {
     int error_code = 0;
 
     if (films == NULL)
     {
-        return 6;
+        return 3;
     }
 
     SA_DynamicArray* user_datas = SA_dynarray_create_size_hint(UserData, EXPECTED_MAX_USER_ID);
@@ -49,7 +56,7 @@ static int write_users(FILE* file, SA_DynamicArray* films)
 
     if (fwrite(&user_count, sizeof(user_count), 1, file) <= 0)
     {
-        error_code = 1;
+        error_code = 2;
         goto QUIT;
     }
 
@@ -86,6 +93,14 @@ QUIT:
     return error_code;
 }
 
+/// @brief Write all film data to a binary file
+/// @param out_filename File path of this binary file
+/// @param films Array of structures containing the film_id, number of ratings and array of ratings for every movie
+/// @return
+/// * 0 if everything went correctly
+/// * 1 if the file does not exist
+/// * 2 if writing was impossible
+/// * 3 if the films array is NULL
 int write_films(const char* out_filename, SA_DynamicArray* films)
 {
     long last_slash = -1;
@@ -93,9 +108,9 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
 
     if (films == NULL)
     {
-        return 6;
+        return 3;
     }
-    
+
     out_folder = (char*) SA_malloc((SA_strlen(out_filename) + 1) * sizeof(char));
     SA_strcpy(out_folder, out_filename);
 
@@ -135,7 +150,7 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
         Film f = SA_dynarray_get(Film, films, i);
         if (fwrite(&f, sizeof(Film), 1, file) <= 0)
         {
-            error_code = 3;
+            error_code = 2;
             goto QUIT;
         }
     }
@@ -150,7 +165,7 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
             Rating r = SA_dynarray_get(Rating, f.ratings, j);
             if (fwrite(&r, sizeof(Rating), 1, file) <= 0)
             {
-                error_code = 4;
+                error_code = 2;
                 goto QUIT;
             }
         }
@@ -158,7 +173,7 @@ int write_films(const char* out_filename, SA_DynamicArray* films)
         fseek(file, sizeof(uint64_t) + i * sizeof(Film) + offsetof(Film, ratings), SEEK_SET);
         if (fwrite(&pos, sizeof(SA_DynamicArray*), 1, file) <= 0)
         {
-            error_code = 5;
+            error_code = 2;
             goto QUIT;
         }
         fseek(file, end_pos, SEEK_SET);

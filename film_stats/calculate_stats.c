@@ -7,6 +7,10 @@
 #include "src/recommendation/recommendation.h"
 #include "src/recommendation/parse_liked_films.h"
 
+/// @brief Compare recommendations between two movies (used by qsort)
+/// @param e1 A movie stats structure pointer
+/// @param e2 Another movie stat structure pointer
+/// @return -1 if the first movie has a higher recommendation, 1 if the second one has a higher recommendation, 0 if the recommendations are equal
 static inline int cmp_recommendations(const void* e1, const void* e2)
 {
     if(((FilmStats*)e1)->recommendation < ((FilmStats*)e2)->recommendation)
@@ -20,6 +24,9 @@ static inline int cmp_recommendations(const void* e1, const void* e2)
     return 0;
 }
 
+/// @brief Returns the year of the most recent review
+/// @param ratings An array of ratings structure containing the author, rating and date
+/// @return The most recent year if it exists, otherwise YEARS_OFFSET
 static uint32_t get_max_year(SA_DynamicArray* ratings)
 {
     uint8_t max_year_offset = 0;
@@ -34,6 +41,11 @@ static uint32_t get_max_year(SA_DynamicArray* ratings)
     return (uint32_t)max_year_offset + YEARS_OFFSET;
 }
 
+/// @brief Add film stats of a movie
+/// @param film_stats Array of stats for each movie
+/// @param film_filtered Pointer to a film with filtered reviews
+/// @param reviewers Array of structures containing the number of ratings and average rating for each user
+/// @param liked_films Array of liked films
 static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtered, const SA_DynamicArray* reviewers, const SA_DynamicArray* liked_films)
 {
     uint64_t note_sum = 0;
@@ -74,6 +86,12 @@ static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtere
     SA_dynarray_append(FilmStats, film_stats, stats);
 }
 
+/// @brief Applies all filters to a movie structure pointer
+/// @param film_filtered The movie with all enabled filters applied
+/// @param film_to_filter The movie on which to apply the filters
+/// @param reviewers Array of structures containing the number of ratings and average rating for each user
+/// @param filter_options The filters to apply
+/// @return SA_TRUE if at least one filter was applied, else SA_FALSE
 static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter, const SA_DynamicArray* reviewers, const Arguments* filter_options)
 {
     Film film_to_filter_copy = *film_to_filter;
@@ -130,6 +148,11 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
     return filter_applied;
 }
 
+/// @brief Calculate stats for every movie in the dataset
+/// @param films Array of movies
+/// @param reviewers Array of structures containing the number of ratings and average rating for each user
+/// @param filter_options Pointer to a structure containing all the filters to apply
+/// @return Film stats for every movie
 SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const Arguments* filter_options)
 {
     SA_DynamicArray* film_stats = SA_dynarray_create_size_hint(FilmStats, EXPECTED_FILM_NUMBERS);

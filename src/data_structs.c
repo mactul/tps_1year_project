@@ -1,5 +1,7 @@
 #include "src/data_structs.h"
 
+/// @brief Free an array to a Film structure (as this structure also contains a pointer)
+/// @param films Pointer to an array of Film structure
 void films_list_free(SA_DynamicArray** films)
 {
     if(*films == NULL)

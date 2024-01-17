@@ -7,11 +7,19 @@
 
 #define MOVIE_COUNT 500
 
+/// @brief Redraws the scrollbar in a graphical window
+/// @param window Which window to draw the scrollbar in
+/// @param elevator_properties Pointer to properties of the scrollbar
 void redraw_elevator(SA_GraphicsWindow* window, ElevatorProperties* elevator_properties)
 {
     SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH - ELEVATOR_WIDTH, LIST_WIDTH, elevator_properties->position_y + ELEVATOR_HEIGHT / 2, elevator_properties->color, ELEVATOR_HEIGHT);
 }
 
+/// @brief Draw the movie list from a percentage of scrolling
+/// @param window Which window to draw the list in
+/// @param percentage Percentage of scroll in the list
+/// @param pixel_offset Pixel offset in the list to store current scroll position
+/// @param elevator_properties Pointer to properties of the scrollbar
 void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage, int* pixel_offset, ElevatorProperties* elevator_properties)
 {
     if (percentage < 0)
@@ -50,6 +58,11 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
     redraw_elevator(window, elevator_properties);
 }
 
+/// @brief Draw the movie list from a pixel offset of scrolling
+/// @param window Which window to draw the list in
+/// @param direction Number of pixels to scroll (negative to go up)
+/// @param pixel_offset Pixel offset in the list to store current scroll position
+/// @param elevator_properties Pointer to properties of the scrollbar
 void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int direction, int* pixel_offset, ElevatorProperties* elevator_properties)
 {
     int movie_count = MOVIE_COUNT;
@@ -73,6 +86,8 @@ void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int d
     draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties);
 }
 
+/// @brief This function receives all the events linked to a window
+/// @param window The window that produced the event
 void draw_callback(SA_GraphicsWindow *window)
 {
     SA_graphics_vram_draw_horizontal_line(window, 0, WINDOW_WIDTH, WINDOW_HEIGHT / 2, WINDOW_BACKGROUND, WINDOW_HEIGHT);
@@ -156,6 +171,7 @@ void draw_callback(SA_GraphicsWindow *window)
     } while (!event_read || event.event_type != SA_GRAPHICS_EVENT_CLOSE_WINDOW);
 }
 
+/// @brief Start the graphical window
 void start_gui()
 {
     SA_graphics_create_window("Statistiques", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, draw_callback, SA_GRAPHICS_QUEUE_EVERYTHING, NULL);

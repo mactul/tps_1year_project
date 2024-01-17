@@ -3,7 +3,8 @@
 #include <SA/SA.h>
 #include "arg-handler.h"
 
-void print_usage(void)
+/// @brief Print command-line options of this program
+void print_usage()
 {
     puts(
         "film_stats, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"
@@ -20,6 +21,12 @@ void print_usage(void)
     );
 }
 
+/// @brief Parse the command-line arguments
+/// @param argc Number of arguments passed
+/// @param argv Array of string arguments
+/// @param args_structure Structure containing all the flags
+/// @param arg_rest Pointer to a value that will be updated to be the index of the first non-flag string in argv (as getopt reorders all the arguments)
+/// @return false if the arguments passed to the program are incorrect, else true
 bool parse_args(int argc, char* argv[], Arguments* args_structure, int* arg_rest)
 {
     args_structure->bad_reviewers = NULL;

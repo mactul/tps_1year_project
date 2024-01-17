@@ -10,9 +10,16 @@
 
 volatile sig_atomic_t _interruption_requested;
 
+/// @brief This program goes through all the specified text files to create a binary file
+/// @return 
+/// * 0 if everything went correctly
+/// * 1 if there was a memory allocation error
+/// * 2 if the movie file doesn't exist
+/// * 3 if the command line arguments are incorrect
+/// * 4 if the user cancelled the program
 int main(int argc, char* argv[])
 {
-
+    int exit_code = 0;
     _interruption_requested = 0;
     signal(SIGINT, sigint_handler);
 
@@ -24,6 +31,7 @@ int main(int argc, char* argv[])
     films = SA_dynarray_create_size_hint(Film, EXPECTED_FILM_NUMBERS);
     if(films == NULL)
     {
+        exit_code = 1;
         goto EXIT_LBL;
     }
 
@@ -41,17 +49,20 @@ int main(int argc, char* argv[])
             else
             {
                 SA_print_error("-o requires an argument\n");
+                exit_code = 3;
                 goto EXIT_LBL;
             }
         }
         else if(read_movie_file(films, argv[i]) != 0)
         {
+            exit_code = 2;
             goto EXIT_LBL;
         }
     }
 
     if (i < argc - 1)
     {
+        exit_code = 4;
         printf("\nParsing aborted, file untouched\n");
         goto EXIT_LBL;
     }
@@ -62,4 +73,5 @@ EXIT_LBL:
     films_list_free(&films);
 
     SA_destroy();
+    return exit_code;
 }

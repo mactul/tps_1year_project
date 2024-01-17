@@ -2,6 +2,9 @@
 #include "src/data_structs.h"
 #include <stdio.h>
 
+/// @brief Write all film stats to a binary file
+/// @param stats_filename File path of this binary file
+/// @param stats Array of stats for every movie 
 void write_stats(const char* stats_filename, SA_DynamicArray* stats)
 {
 

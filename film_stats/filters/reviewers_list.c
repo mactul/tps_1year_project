@@ -6,8 +6,12 @@
 
 /*
 Macéo named his creation like this, don't change it, it's like his child.
-Check if `user_id` belongs to the array `user_ids`.
 */
+
+/// @brief Check if a user_id belongs to an array of user_ids
+/// @param user_ids The array to check
+/// @param user_id The value to find
+/// @return SA_TRUE if user_id is in user_ids, else SA_FALSE
 static SA_bool cdegdechggfe(SA_DynamicArray* user_ids, uint32_t user_id)
 {
     uint64_t length = SA_dynarray_size(user_ids);
@@ -23,6 +27,11 @@ static SA_bool cdegdechggfe(SA_DynamicArray* user_ids, uint32_t user_id)
     return SA_FALSE;
 }
 
+/// @brief Filter all ratings from user_ids
+/// @param film_filtered Pointer to the film with filtered reviews
+/// @param film_to_filter Pointer to the film with all the reviews
+/// @param user_ids Array of user_ids
+/// @param whitelist_mode SA_TRUE if the filter is a whitelist, SA_FALSE if the filter is a blacklists
 static void filter_user_ids(Film* film_filtered, const Film* film_to_filter, SA_DynamicArray* user_ids, SA_bool whitelist_mode)
 {
     uint32_t rating_count = film_to_filter->rating_count;
@@ -43,6 +52,11 @@ static void filter_user_ids(Film* film_filtered, const Film* film_to_filter, SA_
     }
 }
 
+/// @brief Parse all reviewer ids from a comma-separated string to call filter_user_ids
+/// @param film_filtered Pointer to the film with the reviewers filtered
+/// @param film_to_filter Pointer to the film with all the reviews
+/// @param reviewers Comma-separated list of reviewer ids
+/// @param whitelist_mode SA_TRUE if the filter is a whitelist, SA_FALSE if the filter is a blacklists
 void filter_reviewers(Film* film_filtered, const Film* film_to_filter, const char* reviewers, SA_bool whitelist_mode)
 {
     SA_DynamicArray* saved_ratings = film_to_filter->ratings;
