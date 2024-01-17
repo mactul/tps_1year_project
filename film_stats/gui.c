@@ -74,7 +74,7 @@ void draw_callback(SA_GraphicsWindow *window)
     SA_bool event_read;
     SA_GraphicsEvent event;
 
-    SA_bool mouse_down = SA_FALSE;
+    SA_bool elevator_mouse_down = SA_FALSE;
 
     do {
         if ((event_read = SA_graphics_wait_next_event(window, &event)))
@@ -87,22 +87,22 @@ void draw_callback(SA_GraphicsWindow *window)
                         elevator_properties.color = ELEVATOR_COLOR_CLICKED;
                         draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties);
                         SA_graphics_vram_flush(window);
-                        mouse_down = SA_TRUE;
+                        elevator_mouse_down = SA_TRUE;
                     }
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_UP:
                     elevator_properties.color = ELEVATOR_COLOR_DEFAULT;
                     draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties);
                     SA_graphics_vram_flush(window);
-                    mouse_down = SA_FALSE;
+                    elevator_mouse_down = SA_FALSE;
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_MOVE:
                     cursor_properties = event.events.mouse;
-                    if (mouse_down)
+                    if (elevator_mouse_down)
                     {
                         elevator_properties.color = ELEVATOR_COLOR_CLICKED;
                         draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties);
-                        mouse_down = SA_TRUE;
+                        elevator_mouse_down = SA_TRUE;
                     }
                     else if ((int) event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && (int) event.events.mouse.x <= LIST_WIDTH && (int) event.events.mouse.y >= elevator_properties.position_y && (int) event.events.mouse.y <= elevator_properties.position_y + ELEVATOR_HEIGHT)
                     {
