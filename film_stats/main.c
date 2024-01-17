@@ -151,4 +151,5 @@ EXIT_LBL:
 
     SA_destroy();
 
+    return exit_code;
 }
