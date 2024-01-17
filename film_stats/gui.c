@@ -4,9 +4,9 @@
 
 #include <math.h>
 
-#define MOVIE_COUNT 200
+#define MOVIE_COUNT 17770
 
-void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage)
+void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage, int* pixel_offset, ElevatorProperties* elevator_properties)
 {
     if (percentage < 0)
     {
@@ -17,29 +17,57 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
         percentage = 1;
     }
 
-    uint32_t movie_count = MOVIE_COUNT;
-    uint32_t list_height = ((movie_count + 1) * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT - HEADER_HEIGHT;
-    uint32_t pixel_offset = round(list_height * percentage);
+    int movie_count = MOVIE_COUNT;
+    int list_height = ((movie_count + 1) * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT - HEADER_HEIGHT;
+    *pixel_offset = round(list_height * percentage);
 
-    uint32_t element = (pixel_offset) / LIST_ENTRY_HEIGHT;
+    int element = *pixel_offset / LIST_ENTRY_HEIGHT;
     printf("First (at least partially) visible element = %d\n", element);
 
     SA_graphics_vram_draw_vertical_line(window, 0, HEADER_HEIGHT + 1, WINDOW_HEIGHT, 0, LIST_WIDTH * 2);
 
     for (int i = 0; i < (WINDOW_HEIGHT - HEADER_HEIGHT) / LIST_ENTRY_HEIGHT + 1; i++)
     {
-        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, 0x0000FF, 2);
+        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, 0x0000FF, 2);
     }
 
-    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH - ELEVATOR_WIDTH, LIST_WIDTH, percentage * (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT) + HEADER_HEIGHT + ELEVATOR_HEIGHT / 2, 0x808080, ELEVATOR_HEIGHT);
+    elevator_properties->position_y = percentage * (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT) + HEADER_HEIGHT;
+
+    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH - ELEVATOR_WIDTH, LIST_WIDTH, elevator_properties->position_y + ELEVATOR_HEIGHT / 2, elevator_properties->color, ELEVATOR_HEIGHT);
+}
+
+void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int direction, int* pixel_offset, ElevatorProperties* elevator_properties)
+{
+    int movie_count = MOVIE_COUNT;
+    int list_height = ((movie_count + 1) * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT - HEADER_HEIGHT;
+    if (*pixel_offset + direction < 0)
+    {
+        *pixel_offset = 0;
+        double percentage = (double) *pixel_offset / list_height;
+        draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties);
+        return;
+    }
+    if (*pixel_offset + direction > list_height)
+    {
+        *pixel_offset = list_height;
+        double percentage = (double) *pixel_offset / list_height;
+        draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties);
+        return;
+    }
+    *pixel_offset += direction;
+    double percentage = (double) *pixel_offset / list_height;
+    draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties);
 }
 
 void draw_callback(SA_GraphicsWindow *window)
 {
+    int pixel_offset = 0;
+    ElevatorProperties elevator_properties = {.color = ELEVATOR_COLOR_DEFAULT, .position_y = 0};
+    SA_EventMouse cursor_properties = {.x = 0, .y = 0};
     SA_graphics_vram_draw_horizontal_line(window, 0, WINDOW_WIDTH, HEADER_HEIGHT, 0x0000FF, 2);
     SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH, HEADER_HEIGHT, WINDOW_HEIGHT, 0x0000FF, 2);
 
-    draw_movie_list_from_percentage_offset(window,  0.0);
+    draw_movie_list_from_percentage_offset(window,  0.0, &pixel_offset, &elevator_properties);
 
     SA_graphics_vram_flush(window);
 
@@ -56,36 +84,57 @@ void draw_callback(SA_GraphicsWindow *window)
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_DOWN:
                     if (event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.x < LIST_WIDTH)
                     {
-                        // printf("ELEVATOR MOVE AT HEIGHT %d\n", event.events.mouse.y - HEADER_HEIGHT);
-                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT));
+                        elevator_properties.color = ELEVATOR_COLOR_CLICKED;
+                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties);
                         SA_graphics_vram_flush(window);
                         mouse_down = SA_TRUE;
                     }
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_UP:
-                    printf("RELEASE %d %d\n", event.events.mouse.x, event.events.mouse.y);
+                    elevator_properties.color = ELEVATOR_COLOR_DEFAULT;
+                    draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties);
+                    SA_graphics_vram_flush(window);
                     mouse_down = SA_FALSE;
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_MOVE:
+                    cursor_properties = event.events.mouse;
                     if (mouse_down)
                     {
-                        // printf("ELEVATOR MOVE AT HEIGHT %d\n", event.events.mouse.y - HEADER_HEIGHT);
-                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT));
-                        SA_graphics_vram_flush(window);
+                        elevator_properties.color = ELEVATOR_COLOR_CLICKED;
+                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties);
                         mouse_down = SA_TRUE;
                     }
+                    else if ((int) event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && (int) event.events.mouse.x <= LIST_WIDTH && (int) event.events.mouse.y >= elevator_properties.position_y && (int) event.events.mouse.y <= elevator_properties.position_y + ELEVATOR_HEIGHT)
+                    {
+                        elevator_properties.color = ELEVATOR_COLOR_HOVER;
+                        draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties);
+                    }
+                    else
+                    {
+                        elevator_properties.color = ELEVATOR_COLOR_DEFAULT;
+                        draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties);
+                    }
+                    SA_graphics_vram_flush(window);
                     break;
                 case SA_GRAPHICS_EVENT_SCROLL_UP:
-                    printf("SCROLL UP\n");
+                    if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT)
+                    {
+                        draw_movie_list_from_relative_pixel_offset(window, -SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties);
+                        SA_graphics_vram_flush(window);
+                    }
                     break;
                 case SA_GRAPHICS_EVENT_SCROLL_DOWN:
-                    printf("SCROLL DOWN\n");
+                    if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT)
+                    {
+                        draw_movie_list_from_relative_pixel_offset(window, SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties);
+                        SA_graphics_vram_flush(window);
+                    }
                     break;
                 case SA_GRAPHICS_EVENT_CLOSE_WINDOW:
                     printf("Window close\n");
                     break;
                 default:
-                    printf("Other, %d\n", event.event_type);
+                    printf("Other event, %d\n", event.event_type);
                     break;
             }
         }
@@ -94,5 +143,5 @@ void draw_callback(SA_GraphicsWindow *window)
 
 void start_gui()
 {
-    SA_graphics_create_window("Statistiques", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, draw_callback, (uint32_t) -1, NULL);
+    SA_graphics_create_window("Statistiques", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, draw_callback, SA_GRAPHICS_QUEUE_EVERYTHING, NULL);
 }
