@@ -35,3 +35,16 @@ target("film_gui")
     add_links("sa")
     add_links("m")
     add_cxflags("-pedantic", "-O3")
+
+task("docs")
+    on_run(function ()
+        print("Generating docs")
+        os.exec("doxygen")
+    end)
+    set_menu {
+                -- Settings menu usage
+                usage = "xmake docs"
+
+                -- Setup menu description
+            ,   description = "Generate documentation using doxygen"
+    }
