@@ -15,6 +15,7 @@
 
 #define DEFAULT_DATA_FOLDER "data/"
 #define DEFAULT_FILMS_DATA_FILE DEFAULT_DATA_FOLDER "films_data.bin"
+#define DEFAULT_FILMS_STATS_FILE DEFAULT_DATA_FOLDER "film_stats.bin"
 
 typedef struct _reviewer {
     uint16_t rate_count;

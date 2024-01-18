@@ -160,7 +160,7 @@ void draw_callback(SA_GraphicsWindow *window)
 
     SA_DynamicArray* films_infos = get_films_infos("download/movie_titles.txt");
 
-    FILE* films = fopen(DEFAULT_FILMS_DATA_FILE, "r");
+    FILE* films = fopen(DEFAULT_FILMS_STATS_FILE, "rb");
     if (films == NULL)
     {
         return;
