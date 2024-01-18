@@ -10,6 +10,48 @@
 
 #define MOVIE_COUNT 17770
 
+/// @brief Draw movie statistics in the info window
+/// @param window The window in which to draw
+/// @param mouse_y Vertical position of the cursor to find the movie index
+/// @param pixel_offset Offset of the list that is shown inside the window
+/// @param films_infos Array of structures containing the title and release year for every movie
+/// @param films_stats Array of structures containing stats about every movie
+void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats)
+{
+    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH, WINDOW_WIDTH, (WINDOW_HEIGHT - HEADER_HEIGHT) / 2, WINDOW_BACKGROUND, WINDOW_HEIGHT - HEADER_HEIGHT);
+    int movie_pixel_offset = mouse_y - HEADER_HEIGHT + *pixel_offset;
+    int movie_count = SA_dynarray_size(films_stats);
+    int movie_number = movie_pixel_offset / LIST_ENTRY_HEIGHT;
+    FilmStats* fstats = _SA_dynarray_get_element_ptr(films_stats, movie_number);
+    FilmInfo* info = _SA_dynarray_get_element_ptr(films_infos, fstats->film_id);
+    SA_GraphicsRectangle graphics_rectangle_avg_ratings = {.height = GRAPH_HEIGHT, .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD, .top_left_corner_x = LIST_WIDTH + GRAPH_PAD, .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - 2 * GRAPH_HEIGHT - GRAPH_PAD / 2};
+    SA_GraphicsRectangle graphics_rectangle_ratings_count = {.height = GRAPH_HEIGHT, .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD, .top_left_corner_x = LIST_WIDTH + GRAPH_PAD, .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - GRAPH_HEIGHT};
+    
+    double years[NUMBER_OF_YEARS_LOGGED_IN_STATS] = {0};
+    double ratings[NUMBER_OF_YEARS_LOGGED_IN_STATS];
+    double ratings_count[NUMBER_OF_YEARS_LOGGED_IN_STATS];
+    int ratings_total_count = 0;
+
+    for (int i = 0; i < NUMBER_OF_YEARS_LOGGED_IN_STATS; i++)
+    {
+        years[i] = fstats->max_year - i;
+        ratings[i] = fstats->mean_rating_over_years[i] < 0 ? 0 : fstats->mean_rating_over_years[i];
+        ratings_count[i] = fstats->kept_rating_count_over_years[i];
+        ratings_total_count += round(fstats->kept_rating_count_over_years[i]);
+    }
+
+    SA_graphics_plot_continuous_graph(window, years, ratings, 10, &graphics_rectangle_avg_ratings, 0x0, 0xFF0000, 0xFFFFFF);
+    SA_graphics_plot_continuous_graph(window, years, ratings_count, 10, &graphics_rectangle_ratings_count, 0x0, 0xFF0000, 0xFFFFFF);
+
+    const char desc1[] = "Average rating over years";
+    const char desc2[] = "Number of ratings per year";
+    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - strlen(desc1)) / 2 + LIST_WIDTH, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 20, desc1, WINDOW_FOREGROUND);
+    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - strlen(desc2)) / 2 + LIST_WIDTH, graphics_rectangle_ratings_count.top_left_corner_y + graphics_rectangle_ratings_count.height + 20, desc2, WINDOW_FOREGROUND);
+    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - strlen(info->name)) / 2 + LIST_WIDTH, HEADER_HEIGHT + 20, info->name, WINDOW_FOREGROUND);
+
+
+}
+
 /// @brief Redraws the scrollbar in a graphical window
 /// @param window Which window to draw the scrollbar in
 /// @param elevator_properties Pointer to properties of the scrollbar
@@ -23,6 +65,8 @@ void redraw_elevator(SA_GraphicsWindow* window, ElevatorProperties* elevator_pro
 /// @param percentage Percentage of scroll in the list
 /// @param pixel_offset Pixel offset in the list to store current scroll position
 /// @param elevator_properties Pointer to properties of the scrollbar
+/// @param films_infos Array of structures containing the title and release year for every movie
+/// @param films_stats Array of structures containing stats about every movie
 void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats)
 {
     if (percentage < 0)
@@ -34,17 +78,17 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
         percentage = 1;
     }
 
-    int movie_count = MOVIE_COUNT;
+    int movie_count = SA_dynarray_size(films_stats);
     int list_height = (movie_count * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT + HEADER_HEIGHT;
     *pixel_offset = round(list_height * percentage);
 
     int element = *pixel_offset / LIST_ENTRY_HEIGHT;
-    printf("First (at least partially) visible element = %d\n", element);
 
     SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH - (ELEVATOR_WIDTH / 2) - 1, HEADER_HEIGHT + 1, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR, ELEVATOR_WIDTH);
     SA_graphics_vram_draw_vertical_line(window, (LIST_WIDTH - ELEVATOR_WIDTH) / 2, HEADER_HEIGHT + 1, WINDOW_HEIGHT, WINDOW_BACKGROUND, (LIST_WIDTH - ELEVATOR_WIDTH));
 
-    char text_limited[80] = {0};
+    char text_limited[75] = {0};
+    char year[5] = {0};
 
     for (int i = 0; i < (WINDOW_HEIGHT - HEADER_HEIGHT) / LIST_ENTRY_HEIGHT + 1; i++)
     {
@@ -58,14 +102,16 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
             SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_ALTERNATE, LIST_ENTRY_HEIGHT);
         }
         SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, WINDOW_FOREGROUND, 1);
-        if (HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 10 <= HEADER_HEIGHT)
+        if (HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 25 <= HEADER_HEIGHT)
         {
             continue;
         }
         FilmStats* fstats = _SA_dynarray_get_element_ptr(films_stats, element + i);
-        FilmInfo info = SA_dynarray_get(FilmInfo, films_infos, fstats->film_id);
-        SA_strncpy(text_limited, info.name, sizeof(text_limited));
-        SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 20, text_limited, WINDOW_FOREGROUND);
+        FilmInfo* info = _SA_dynarray_get_element_ptr(films_infos, fstats->film_id);
+        SA_strncpy(text_limited, info->name, sizeof(text_limited));
+        snprintf(year, 5, "%hd", info->year);
+        SA_graphics_vram_draw_text(window, 15, HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 35, text_limited, WINDOW_FOREGROUND);
+        SA_graphics_vram_draw_text(window, 20, HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 60, year, WINDOW_FOREGROUND_ALTERNATE);
     }
 
     elevator_properties->position_y = percentage * (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT) + HEADER_HEIGHT;
@@ -77,6 +123,8 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
 /// @param direction Number of pixels to scroll (negative to go up)
 /// @param pixel_offset Pixel offset in the list to store current scroll position
 /// @param elevator_properties Pointer to properties of the scrollbar
+/// @param films_infos Array of structures containing the title and release year for every movie
+/// @param films_stats Array of structures containing stats about every movie
 void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int direction, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats)
 {
     int movie_count = MOVIE_COUNT;
@@ -112,7 +160,7 @@ void draw_callback(SA_GraphicsWindow *window)
 
     SA_DynamicArray* films_infos = get_films_infos("download/movie_titles.txt");
 
-    FILE* films = fopen("out/stats.bin", "r");
+    FILE* films = fopen(DEFAULT_FILMS_DATA_FILE, "r");
     if (films == NULL)
     {
         return;
@@ -125,7 +173,7 @@ void draw_callback(SA_GraphicsWindow *window)
     }
 
     SA_graphics_vram_draw_horizontal_line(window, 0, WINDOW_WIDTH, WINDOW_HEIGHT / 2, WINDOW_BACKGROUND, WINDOW_HEIGHT);
-    SA_graphics_vram_draw_text(window, 10, 25, "Statistiques des films", WINDOW_FOREGROUND);
+    SA_graphics_vram_draw_text(window, 10, 25, "Movie stats - recommended for you", WINDOW_FOREGROUND);
     int pixel_offset = 0;
     ElevatorProperties elevator_properties = {.color = ELEVATOR_COLOR_DEFAULT, .position_y = 0};
     SA_EventMouse cursor_properties = {.x = 0, .y = 0};
@@ -147,12 +195,16 @@ void draw_callback(SA_GraphicsWindow *window)
             switch(event.event_type)
             {
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_DOWN:
-                    if (event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.x < LIST_WIDTH)
+                    if (event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.x < LIST_WIDTH) // Click (or hold) on elevator
                     {
                         elevator_properties.color = ELEVATOR_COLOR_CLICKED;
                         draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties, films_infos, films_stats);
                         SA_graphics_vram_flush(window);
                         elevator_mouse_down = SA_TRUE;
+                    }
+                    else if (event.events.mouse.x < LIST_WIDTH - ELEVATOR_WIDTH) // Click on a movie
+                    {
+                        draw_movie_info(window, event.events.mouse.y, &pixel_offset, films_infos, films_stats);
                     }
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_UP:
@@ -163,12 +215,12 @@ void draw_callback(SA_GraphicsWindow *window)
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_MOVE:
                     cursor_properties = event.events.mouse;
-                    if (elevator_mouse_down == SA_TRUE)
+                    if (elevator_mouse_down == SA_TRUE) // Moving the elevator
                     {
                         elevator_properties.color = ELEVATOR_COLOR_CLICKED;
                         draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties, films_infos, films_stats);
                     }
-                    else if ((int) event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && (int) event.events.mouse.x <= LIST_WIDTH && (int) event.events.mouse.y >= elevator_properties.position_y && (int) event.events.mouse.y <= elevator_properties.position_y + ELEVATOR_HEIGHT)
+                    else if ((int) event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && (int) event.events.mouse.x <= LIST_WIDTH && (int) event.events.mouse.y >= elevator_properties.position_y && (int) event.events.mouse.y <= elevator_properties.position_y + ELEVATOR_HEIGHT) // Hover over the elevator
                     {
                         elevator_properties.color = ELEVATOR_COLOR_HOVER;
                         redraw_elevator(window, &elevator_properties);
@@ -181,24 +233,22 @@ void draw_callback(SA_GraphicsWindow *window)
                     SA_graphics_vram_flush(window);
                     break;
                 case SA_GRAPHICS_EVENT_SCROLL_UP:
-                    if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT)
+                    if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT) // Scrolling in list
                     {
                         draw_movie_list_from_relative_pixel_offset(window, -SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties, films_infos, films_stats);
                         SA_graphics_vram_flush(window);
                     }
                     break;
                 case SA_GRAPHICS_EVENT_SCROLL_DOWN:
-                    if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT)
+                    if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT) // Scrolling in list
                     {
                         draw_movie_list_from_relative_pixel_offset(window, SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties, films_infos, films_stats);
                         SA_graphics_vram_flush(window);
                     }
                     break;
                 case SA_GRAPHICS_EVENT_CLOSE_WINDOW:
-                    printf("Window close\n");
-                    break;
+                    printf("Bye bye\n");
                 default:
-                    printf("Other event, %d\n", event.event_type);
                     break;
             }
         }
