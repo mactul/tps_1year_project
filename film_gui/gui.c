@@ -247,6 +247,8 @@ void draw_callback(SA_GraphicsWindow *window)
                     }
                     break;
                 case SA_GRAPHICS_EVENT_CLOSE_WINDOW:
+                    SA_dynarray_free(&films_stats);
+                    SA_dynarray_free(&films_infos);
                     printf("Bye bye\n");
                 default:
                     break;
