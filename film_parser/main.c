@@ -3,10 +3,10 @@
 #include "src/dataset_io/parser_txt.h"
 #include "src/dataset_io/parser_bin.h"
 #include "src/dataset_io/writer_bin.h"
-#include "src/arg-handler.h"
 #include "src/signal_handler.h"
+#include "film_parser/arg-handler.h"
 
-#define MAX_OUT_FOLDER_PATH 256
+#define MAX_OUT_FILE_PATH 256
 
 volatile sig_atomic_t _interruption_requested;
 
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     signal(SIGINT, sigint_handler);
 
     SA_DynamicArray* films = NULL;
-    char out_folder_path[MAX_OUT_FOLDER_PATH] = DEFAULT_FILMS_DATA_FILE;
+    char out_file_path[MAX_OUT_FILE_PATH] = DEFAULT_FILMS_DATA_FILE;
 
     SA_init();
 
@@ -35,39 +35,29 @@ int main(int argc, char* argv[])
         goto EXIT_LBL;
     }
 
-    int i;
-
-    for (i = 1; i < argc && !_interruption_requested; i++)
+    ParserArguments args_structure;
+    int arg_rest;
+    if (!parse_args(argc, argv, &args_structure, &arg_rest))
     {
-        if(SA_strcmp(argv[i], "-o") == 0)
-        {
-            i++;
-            if(i < argc)
-            {
-                SA_strncpy(out_folder_path, argv[i], MAX_OUT_FOLDER_PATH);
-            }
-            else
-            {
-                SA_print_error("-o requires an argument\n");
-                exit_code = 3;
-                goto EXIT_LBL;
-            }
-        }
-        else if(read_movie_file(films, argv[i]) != 0)
+        exit_code = 3;
+        goto EXIT_LBL;
+    }
+
+    if (args_structure.out_file_path != NULL)
+    {
+        SA_strncpy(out_file_path, args_structure.out_file_path, MAX_OUT_FILE_PATH);
+    }
+
+    for (int i = arg_rest; i < argc; i++)
+    {
+        if (read_movie_file(films, argv[i]) != 0)
         {
             exit_code = 2;
             goto EXIT_LBL;
         }
     }
 
-    if (i < argc - 1)
-    {
-        exit_code = 4;
-        printf("\nParsing aborted, file untouched\n");
-        goto EXIT_LBL;
-    }
-
-    write_films(out_folder_path, films);
+    write_films(out_file_path, films);
 
 EXIT_LBL:
     films_list_free(&films);

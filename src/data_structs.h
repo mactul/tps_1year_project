@@ -14,7 +14,7 @@
 #define MAX_FILM_NAME_SIZE 256
 
 #define DEFAULT_DATA_FOLDER "data/"
-#define DEFAULT_FILMS_DATA_FILE DEFAULT_DATA_FOLDER "films_data.bin"
+#define DEFAULT_FILMS_DATA_FILE DEFAULT_DATA_FOLDER "film_data.bin"
 #define DEFAULT_FILMS_STATS_FILE DEFAULT_DATA_FOLDER "film_stats.bin"
 
 typedef struct _reviewer {
@@ -41,14 +41,23 @@ typedef struct _rating {
     uint8_t offseted_year;
 } Rating;
 
-typedef struct _arguments {
+typedef struct _stats_arguments {
     int32_t min_reviews;
     const char* liked_films_filepath;
     const char* limit;
-    const char* output_folder;
     const char* only_reviewers;
     const char* bad_reviewers;
-} Arguments;
+    const char* out_file_path;
+    const char* in_file_path;
+} StatsArguments;
+
+typedef struct _parser_arguments {
+    const char* out_file_path;
+} ParserArguments;
+
+typedef struct _gui_arguments {
+    const char* stats_bin_file;
+} GuiArguments;
 
 typedef struct _film_stats {
     uint32_t film_id;

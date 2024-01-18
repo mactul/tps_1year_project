@@ -2,11 +2,11 @@
 #include <SA/SA.h>
 #include <signal.h>
 #include "film_stats/calculate_stats.h"
+#include "film_stats/arg-handler.h"
 #include "src/dataset_io/parser_txt.h"
 #include "src/dataset_io/parser_bin.h"
 #include "src/dataset_io/writer_bin.h"
 #include "src/stats_io/writer_stats.h"
-#include "src/arg-handler.h"
 #include "src/recommendation/recommendation.h"
 
 #define MAX_FILENAME_SIZE 256
@@ -24,28 +24,9 @@ void sigint_close_files(int signum __attribute__((unused)))
 /// @param reviewers Array of structures containing the number of ratings and average rating for each user
 /// @param filter_options Pointer to a structure containing all the filters to use
 /// @param movie_title_filepath File path of the movie_titles.txt file
-static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const Arguments* filter_options, const char* movie_title_filepath)
+static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const StatsArguments* filter_options, const char* movie_title_filepath)
 {
     SA_DynamicArray* film_stats = calculate_all_stats(films, reviewers, filter_options);
-    char out_file[MAX_FILENAME_SIZE] = "";
-    const char* default_folder = DEFAULT_DATA_FOLDER;
-    uint8_t folder_length = SA_strlen(default_folder);
-
-    if (filter_options->output_folder != NULL)
-    {
-        folder_length = (uint8_t) SA_strlen(filter_options->output_folder);
-        SA_strncpy(out_file, filter_options->output_folder, MAX_FILENAME_SIZE);
-    }
-    else
-    {
-        SA_strcpy(out_file, default_folder);
-    }
-
-    if (out_file[folder_length - 1] != '/')
-    {
-        folder_length++;
-        out_file[folder_length - 1] = '/';
-    }
 
     SA_DynamicArray* films_infos = get_films_infos(movie_title_filepath);
 
@@ -61,15 +42,30 @@ static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* re
         FilmInfo info = SA_dynarray_get(FilmInfo, films_infos, fstats->film_id);
         printf("%d : %s\n", fstats->film_id, info.name);
     }
+    
+    long last_slash = -1;
+    char* out_folder = (char*) SA_malloc((SA_strlen(filter_options->out_file_path) + 1) * sizeof(char));
+    SA_strcpy(out_folder, filter_options->out_file_path);
+
+    for (int i = 0; i < SA_strlen(filter_options->out_file_path); i++)
+    {
+        if (out_folder[i] == '/')
+        {
+            last_slash = i;
+        }
+    }
+    if (last_slash != -1)
+    {
+        out_folder[last_slash] = '\0';
+        SA_recursive_mkdir(out_folder);
+    }
+
+    SA_free(&out_folder);
+
+    write_stats(filter_options->out_file_path, film_stats);
 
 FREE:
     SA_dynarray_free(&films_infos);
-
-    SA_recursive_mkdir(out_file);
-
-    SA_strcpy(&out_file[folder_length], "film_stats.bin");
-
-    write_stats(out_file, film_stats);
     SA_dynarray_free(&film_stats);
 }
 
@@ -89,8 +85,7 @@ int main(int argc, char* argv[])
     SA_DynamicArray* films = NULL;
     SA_DynamicArray* reviewers = NULL;
     char movie_titles_file[MAX_FILENAME_SIZE];
-    char in_file_path[MAX_FILENAME_SIZE] = DEFAULT_FILMS_DATA_FILE;
-    Arguments args_structure;
+    StatsArguments args_structure;
     int index_remaining;
     FILE* file = NULL;
 
@@ -105,12 +100,7 @@ int main(int argc, char* argv[])
     SA_strncpy(movie_titles_file, argv[index_remaining], MAX_FILENAME_SIZE);
     index_remaining++;
 
-    if(index_remaining < argc)
-    {
-        SA_strncpy(in_file_path, argv[index_remaining], MAX_FILENAME_SIZE);
-    }
-
-    file = fopen(in_file_path, "r");
+    file = fopen(args_structure.in_file_path, "r");
 
     if (file == NULL)
     {

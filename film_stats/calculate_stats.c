@@ -92,7 +92,7 @@ static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtere
 /// @param reviewers Array of structures containing the number of ratings and average rating for each user
 /// @param filter_options The filters to apply
 /// @return SA_TRUE if at least one filter was applied, else SA_FALSE
-static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter, const SA_DynamicArray* reviewers, const Arguments* filter_options)
+static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter, const SA_DynamicArray* reviewers, const StatsArguments* filter_options)
 {
     Film film_to_filter_copy = *film_to_filter;
     SA_bool filter_applied = SA_FALSE;
@@ -153,7 +153,7 @@ static SA_bool apply_all_filters(Film* film_filtered, const Film* film_to_filter
 /// @param reviewers Array of structures containing the number of ratings and average rating for each user
 /// @param filter_options Pointer to a structure containing all the filters to apply
 /// @return Film stats for every movie
-SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const Arguments* filter_options)
+SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const StatsArguments* filter_options)
 {
     SA_DynamicArray* film_stats = SA_dynarray_create_size_hint(FilmStats, EXPECTED_FILM_NUMBERS);
     SA_DynamicArray* liked_films = NULL;
