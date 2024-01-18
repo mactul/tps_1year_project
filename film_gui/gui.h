@@ -24,8 +24,12 @@
 #define WINDOW_BACKGROUND_ALTERNATE 0xE0E0EC
 #define WINDOW_FOREGROUND_ALTERNATE 0x606060
 
+#define WINDOW_BACKGROUND_SELECTED 0x3DAEE9
+#define WINDOW_FOREGROUND_SELECTED 0xFFFFFF
+
 #define GRAPH_PAD 50
 #define GRAPH_HEIGHT 300
+#define GRAPH_PLOT_COLOR WINDOW_BACKGROUND_SELECTED
 
 #define FONT_WIDTH 6
 
@@ -40,6 +44,6 @@ typedef struct _elevator_properties {
     int position_y;
 } ElevatorProperties;
 
-void start_gui();
+int start_gui(int argc, char* argv[]);
 
 #endif
