@@ -5,7 +5,6 @@
 #include "src/dataset_io/parser_txt.h"
 #include <SA/SA.h>
 #include <stdio.h>
-#include <string.h>
 
 #include <math.h>
 
@@ -50,20 +49,20 @@ void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_off
 
     const char desc1[] = "Average rating over years";
     const char desc2[] = "Number of ratings per year";
-    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - strlen(desc1)) / 2 + LIST_WIDTH, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 20, desc1, WINDOW_FOREGROUND); // First graph title
-    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - strlen(desc2)) / 2 + LIST_WIDTH, graphics_rectangle_ratings_count.top_left_corner_y + graphics_rectangle_ratings_count.height + 20, desc2, WINDOW_FOREGROUND); // Second graph title
-    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 2 - strlen(info->name) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 20, info->name, WINDOW_FOREGROUND); // Main area title (movie name)
+    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(desc1)) / 2 + LIST_WIDTH, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 20, desc1, WINDOW_FOREGROUND); // First graph title
+    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(desc2)) / 2 + LIST_WIDTH, graphics_rectangle_ratings_count.top_left_corner_y + graphics_rectangle_ratings_count.height + 20, desc2, WINDOW_FOREGROUND); // Second graph title
+    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 2 - SA_strlen(info->name) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 20, info->name, WINDOW_FOREGROUND); // Main area title (movie name)
 
     char recommend_text[50] = "Recommended : ";
-    snprintf(&recommend_text[strlen(recommend_text)], 10, "%f", fstats->recommendation);
+    snprintf(&recommend_text[SA_strlen(recommend_text)], 10, "%f", fstats->recommendation);
 
     char rating_count_text[50] = "Number of rating over these years : ";
-    snprintf(&rating_count_text[strlen(rating_count_text)], 10, "%d", ratings_total_count);
+    snprintf(&rating_count_text[SA_strlen(rating_count_text)], 10, "%d", ratings_total_count);
 
-    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 4 - strlen(recommend_text) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 40, recommend_text, WINDOW_FOREGROUND); // Main area title (movie name)
+    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 4 - SA_strlen(recommend_text) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 40, recommend_text, WINDOW_FOREGROUND); // Main area title (movie name)
 
     int middle_of_main_area = (WINDOW_WIDTH + LIST_WIDTH) / 2;
-    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + middle_of_main_area) - strlen(rating_count_text) * FONT_WIDTH) / 2, HEADER_HEIGHT + 40, rating_count_text, WINDOW_FOREGROUND); // Main area title (movie name)
+    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + middle_of_main_area) - SA_strlen(rating_count_text) * FONT_WIDTH) / 2, HEADER_HEIGHT + 40, rating_count_text, WINDOW_FOREGROUND); // Main area title (movie name)
 
     SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH + GRAPH_PAD, WINDOW_WIDTH - GRAPH_PAD, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 30, WINDOW_FOREGROUND_ALTERNATE, 1); // Separator
 }
@@ -199,8 +198,8 @@ void draw_callback(SA_GraphicsWindow *window)
     SA_graphics_vram_draw_horizontal_line(window, 0, WINDOW_WIDTH, WINDOW_HEIGHT / 2, WINDOW_BACKGROUND, WINDOW_HEIGHT);
     const char wait_text1[] = "Merci de patienter";
     const char wait_text2[] = "Les données sont en train de charger";
-    SA_graphics_vram_draw_text(window, WINDOW_HEIGHT / 2, (WINDOW_WIDTH - strlen(wait_text1)) / 2, wait_text1, WINDOW_FOREGROUND);
-    SA_graphics_vram_draw_text(window, WINDOW_HEIGHT / 2 + 20, (WINDOW_WIDTH - strlen(wait_text2)) / 2, wait_text2, WINDOW_FOREGROUND);
+    SA_graphics_vram_draw_text(window, WINDOW_HEIGHT / 2, (WINDOW_WIDTH - SA_strlen(wait_text1)) / 2, wait_text1, WINDOW_FOREGROUND);
+    SA_graphics_vram_draw_text(window, WINDOW_HEIGHT / 2 + 20, (WINDOW_WIDTH - SA_strlen(wait_text2)) / 2, wait_text2, WINDOW_FOREGROUND);
 
     int selected_index = 0;
 
@@ -233,6 +232,8 @@ void draw_callback(SA_GraphicsWindow *window)
     draw_movie_list_from_percentage_offset(window,  0.0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index);
     
     draw_movie_info(window, HEADER_HEIGHT + 1, &pixel_offset, films_infos, films_stats, &selected_index);
+
+    //draw_star(window, 800, 130);
 
     SA_graphics_vram_flush(window);
 
