@@ -7,16 +7,29 @@
 
 #define STAR_EDGE_SIZE 12
 
+/// @brief Compare integers (used by qsort)
+/// @param e1 Pointer to the first int
+/// @param e2 Pointer to the second int
+/// @return > 0 if the first int is higher, < 0 if the second one is higher, 0 if they are equal
 static inline int cmp(const void* e1, const void* e2)
 {
     return *((int*)e1) - *((int*)e2);
 }
 
+/// @brief Calculate the width of a star drawn in a window
+/// @return Size of the star from left to right
 static inline double get_star_size()
 {
     return 2 * STAR_EDGE_SIZE * (cos(2 * M_PI / 5) + 1);
 }
 
+/// @brief Fill a shape described by an array of vertices by a specified number of pixel columns from left to right inside a window
+/// @param window The window in which to draw the filled shape
+/// @param x Array of horizontal position of vertices
+/// @param y Array of vertical position of vertices
+/// @param nb_vertices Number of vertices (length of both x and y)
+/// @param color Fill color
+/// @param max_x Number of pixel columns to fill inside the polygon
 void fill_polygon_before_max_x(SA_GraphicsWindow* window, const int *x, const int *y, int nb_vertices, uint32_t color, int max_x)
 {
     if(nb_vertices < 3)
@@ -84,6 +97,12 @@ void fill_polygon_before_max_x(SA_GraphicsWindow* window, const int *x, const in
     return;
 }
 
+/// @brief Draw a line in a window from a polar coordinate system
+/// @param window The window in which to draw the line
+/// @param x Horizontal position of the line, will be modified to be the end of the line after execution
+/// @param y Vertical position of the line, will be modified to be the end of the line after execution
+/// @param size Length of the line
+/// @param angle Angle of the line (0 means to the right, reversed as our y axis is inverted)
 void draw_vec(SA_GraphicsWindow* window, double* x, double* y, double size, double angle)
 {
     double old_x = *x;
@@ -93,6 +112,11 @@ void draw_vec(SA_GraphicsWindow* window, double* x, double* y, double size, doub
     SA_graphics_vram_draw_line(window, old_x+0.5, old_y+0.5, *x+0.5, *y+0.5, 0xffd000, 1);
 }
 
+/// @brief Draw a star in a graphical window
+/// @param window The window in which to draw the star
+/// @param x Horizontal position of the star
+/// @param y Vertical position of the star
+/// @param percent_filling Percentage of the star that will be filled (from left to right), e.g. to show 0.3 stars
 void draw_star(SA_GraphicsWindow* window, double x, double y, float percent_filling)
 {
     double angle = 0;
