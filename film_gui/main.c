@@ -9,6 +9,7 @@
 
 static GuiArguments _args_structure;
 static int _return_code;
+static char movie_title_file_path[256];
 
 
 /// @brief Finds all films in film_stats where the corresponding entry in film_infos matches a search pattern and copies them in film_stats_filtered
@@ -132,20 +133,27 @@ void draw_callback(SA_GraphicsWindow *window)
     SA_bool search_bar_highlight = SA_FALSE;
     SA_DynamicArray* film_stats_filtered = NULL;
 
-    SA_DynamicArray* films_infos = get_films_infos("download/movie_titles.txt");
+    SA_DynamicArray* films_infos = get_films_infos(movie_title_file_path);
+    if (films_infos == NULL)
+    {
+        _return_code = RETURN_CODE_ERROR_FILE_NOT_FOUND;
+        return;
+    }
 
     FILE* films = fopen(_args_structure.stats_bin_file, "rb");
-
     if (films == NULL)
     {
-        _return_code = 2;
+        SA_dynarray_free(&films_infos);
+        _return_code = RETURN_CODE_ERROR_FILE_NOT_FOUND;
         return;
     }
     
     SA_DynamicArray* films_stats = read_stats(films);
     if (films_stats == NULL)
     {
-        _return_code = 1;
+        SA_dynarray_free(&films_infos);
+        fclose(films);
+        _return_code = RETURN_CODE_ERROR_MEMORY;
         return;
     }
 
@@ -255,6 +263,7 @@ void draw_callback(SA_GraphicsWindow *window)
                     SA_dynarray_free(&films_stats);
                     SA_dynarray_free(&films_infos);
                     SA_dynarray_free(&film_stats_filtered);
+                    fclose(films);
                     SA_graphics_free_text_input(&text_input);
                     printf("Bye bye\n");
                 default:
@@ -268,20 +277,21 @@ void draw_callback(SA_GraphicsWindow *window)
 /// @param argc Number of command line arguments
 /// @param argv Array of command line arguments
 /// @return 
-/// * 0 if everything went correctly
-/// * 1 if there was a memory allocation error
-/// * 2 if the films
-/// * 3 if command line arguments are incorrect
+/// * RETURN_CODE_OK if everything went correctly
+/// * RETURN_CODE_ERROR_MEMORY if there was a memory allocation error
+/// * RETURN_CODE_ERROR_FILE_NOT_FOUND if the films
+/// * RETURN_CODE_ERROR_ARGUMENTS if command line arguments are incorrect
 int main(int argc, char* argv[])
 {
-    _return_code = 0;
+    _return_code = RETURN_CODE_OK;
     int remaining_index;
     SA_init();
     if (!parse_args(argc, argv, &_args_structure, &remaining_index))
     {
-        _return_code = 3;
+        _return_code = RETURN_CODE_ERROR_ARGUMENTS;
         goto EXIT_LBL;
     }
+    SA_strncpy(movie_title_file_path, argv[remaining_index], 256);
     SA_graphics_create_window("Statistiques", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, draw_callback, SA_GRAPHICS_QUEUE_EVERYTHING, NULL);
 
 EXIT_LBL:

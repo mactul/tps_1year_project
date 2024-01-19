@@ -8,7 +8,7 @@ void print_usage()
 {
     puts(
         "film_stats, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"
-        "Usage: ./film_stats [options] <movie_titles_file>\n\n"
+        "Usage: ./film_stats [options]\n\n"
         "Options:\n"
         "-h\t\t\t\tDisplay this help\n"
         "-o OUT_STATS_BIN_FILE_PATH\tAlternative stats binary file path\n"
@@ -78,15 +78,9 @@ bool parse_args(int argc, char* argv[], StatsArguments* args_structure, int* arg
     }
     *arg_rest = optind;
 
-    if(optind == argc)
+    if(optind != argc)
     {
-        SA_print_error("You must specify the file path for the movie_titles.txt file\n\n");
-        print_usage();
-        return false;
-    }
-    if (optind < argc-2)
-    {
-        SA_print_error("Too many files passed\n\n");
+        SA_print_error("film_stats \n\n");
         print_usage();
         return false;
     }

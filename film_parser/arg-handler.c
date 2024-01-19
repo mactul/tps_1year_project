@@ -47,7 +47,7 @@ bool parse_args(int argc, char* argv[], ParserArguments* args_structure, int* ar
 
     if(optind == argc)
     {
-        SA_print_error("You must at least one source text file\n\n");
+        SA_print_error("You must provide at least one source text file\n\n");
         print_usage();
         return false;
     }

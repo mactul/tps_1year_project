@@ -9,6 +9,7 @@
 #include "src/stats_io/writer_stats.h"
 #include "src/recommendation/recommendation.h"
 #include "src/signal_handler.h"
+#include "src/data_structs.h"
 
 #define MAX_FILENAME_SIZE 256
 
@@ -18,30 +19,20 @@
 /// @param filter_options Pointer to a structure containing all the filters to use
 /// @param movie_title_filepath File path of the movie_titles.txt file
 /// @return
-/// * 0 if everything went correctly
-/// * 2 if the movie_titles.txt file does not exist
-/// * 4 if the program was interrupted
-static int create_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const StatsArguments* filter_options, const char* movie_title_filepath)
+/// * RETURN_CODE_OK if everything went correctly
+/// * RETURN_CODE_SIGNAL_ABORT if the program was interrupted
+static enum RETURN_CODE create_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const StatsArguments* filter_options)
 {
-    int exit_code = 0;
+    int exit_code = RETURN_CODE_OK;
     SA_DynamicArray* film_stats = calculate_all_stats(films, reviewers, filter_options);
 
     if (film_stats == NULL)
     {
-        exit_code = 4;
+        exit_code = RETURN_CODE_SIGNAL_ABORT;
         SA_print_error("\nInterrupted by user\n\n");
         goto FREE;
     }
 
-    SA_DynamicArray* films_infos = get_films_infos(movie_title_filepath);
-
-    if(films_infos == NULL)
-    {
-        exit_code = 2;
-        SA_print_error("Impossible to get the film titles, please make sure the file path is good\n\n");
-        goto FREE;
-    }
-    
     long last_slash = -1;
     char* out_folder = (char*) SA_malloc((SA_strlen(filter_options->out_file_path) + 1) * sizeof(char));
     SA_strcpy(out_folder, filter_options->out_file_path);
@@ -64,27 +55,25 @@ static int create_stats(const SA_DynamicArray* films, const SA_DynamicArray* rev
     write_stats(filter_options->out_file_path, film_stats);
 
 FREE:
-    SA_dynarray_free(&films_infos);
     SA_dynarray_free(&film_stats);
     return exit_code;
 }
 
 /// @brief The program generates statistics from a binary file and displays the best matches
 /// @return 
-/// * 0 if everything went correctly
-/// * 1 if there was a memory allocation error
-/// * 2 if the binary file doesn't exist
-/// * 3 if the command line arguments are incorrect
-/// * 4 if the user cancelled the program (not yet implemented)
+/// * RETURN_CODE_OK if everything went correctly
+/// * RETURN_CODE_ERROR_MEMORY if there was a memory allocation error
+/// * RETURN_CODE_ERROR_FILE_NOT_FOUND if the binary file doesn't exist
+/// * RETURN_CODE_ERROR_ARGUMENTS if the command line arguments are incorrect
+/// * RETURN_CODE_SIGNAL_ABORT if the user cancelled the program
 int main(int argc, char* argv[])
 {
     signal(SIGINT, sigint_handler);
 
-    int exit_code = 0;
+    int exit_code = RETURN_CODE_OK;
 
     SA_DynamicArray* films = NULL;
     SA_DynamicArray* reviewers = NULL;
-    char movie_titles_file[MAX_FILENAME_SIZE];
     StatsArguments args_structure;
     int index_remaining;
     FILE* file = NULL;
@@ -93,37 +82,34 @@ int main(int argc, char* argv[])
 
     if (!parse_args(argc, argv, &args_structure, &index_remaining))
     {
-        exit_code = 3;
+        exit_code = RETURN_CODE_ERROR_ARGUMENTS;
         goto EXIT_LBL;
     }
-
-    SA_strncpy(movie_titles_file, argv[index_remaining], MAX_FILENAME_SIZE);
-    index_remaining++;
 
     file = fopen(args_structure.in_file_path, "r");
 
     if (file == NULL)
     {
         fprintf(stderr, "Data file has not been generated, please run film_parser\n");
-        exit_code = 2;
+        exit_code = RETURN_CODE_ERROR_FILE_NOT_FOUND;
         goto EXIT_LBL;
     }
     films = read_all_films(file);
     if (films == NULL)
     {
-        exit_code = 1;
+        exit_code = RETURN_CODE_ERROR_MEMORY;
         goto EXIT_LBL;
     }
     reviewers = read_all_reviewers(file);
     if(reviewers == NULL)
     {
-        exit_code = 1;
+        exit_code = RETURN_CODE_ERROR_MEMORY;
         goto EXIT_LBL;
     }
     fclose(file);
     file = NULL;
 
-    exit_code = create_stats(films, reviewers, &args_structure, movie_titles_file);
+    exit_code = create_stats(films, reviewers, &args_structure);
 
     printf("distance between Harry Potter II  & Harry Potter II : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 11443), reviewers));
     printf("distance between Harry Potter II  & Harry Potter I  : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 17627), reviewers));

@@ -67,6 +67,14 @@ typedef struct _film_stats {
     uint32_t kept_rating_count_over_years[NUMBER_OF_YEARS_LOGGED_IN_STATS];
 } FilmStats;
 
+enum RETURN_CODE {
+    RETURN_CODE_OK,
+    RETURN_CODE_ERROR_MEMORY,
+    RETURN_CODE_ERROR_FILE_NOT_FOUND,
+    RETURN_CODE_ERROR_ARGUMENTS,
+    RETURN_CODE_SIGNAL_ABORT
+};
+
 void films_list_free(SA_DynamicArray** films);
 
 #endif
