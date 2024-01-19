@@ -39,7 +39,7 @@ bool parse_args(int argc, char* argv[], StatsArguments* args_structure, int* arg
 
     int c;
     opterr = 0;
-    while ((c = getopt(argc, argv, "o:l:s:c:b:e:r:gh")) != -1)
+    while ((c = getopt(argc, argv, "o:l:c:b:e:r:i:h")) != -1)
     {
         switch(c)
         {
@@ -66,6 +66,9 @@ bool parse_args(int argc, char* argv[], StatsArguments* args_structure, int* arg
                     print_usage();
                     return false;
                 }
+                break;
+            case 'i':
+                args_structure->in_file_path = optarg;
                 break;
             case 'h':
                 print_usage();
