@@ -47,6 +47,74 @@ void search_bar_highlight_redraw(SA_GraphicsWindow* window, SA_bool do_highlight
     SA_graphics_vram_draw_hollow_rectangle(window, 0, HEADER_HEIGHT, LIST_WIDTH - 1, SEARCH_BAR_HEIGHT - 1, outline_color, 1);
 }
 
+void event_handler_mouse_down(SA_GraphicsWindow* window, SA_GraphicsEvent* event, SA_bool query_has_results, SA_bool* search_bar_highlight, ElevatorProperties* elevator_properties, SA_bool* elevator_mouse_down, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
+{
+    if (!query_has_results)
+    {
+        return;
+    }
+    *search_bar_highlight = SA_FALSE;
+    if (event->events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && event->events.mouse.x < LIST_WIDTH) // Click (or hold) on elevator
+    {
+        elevator_properties->color = ELEVATOR_COLOR_CLICKED;
+        draw_movie_list_from_percentage_offset(window, ((double) ((int) event->events.mouse.y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT), pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
+        SA_graphics_vram_flush(window);
+        *elevator_mouse_down = SA_TRUE;
+    }
+    else if (event->events.mouse.x < LIST_WIDTH - ELEVATOR_WIDTH && event->events.mouse.y > HEADER_HEIGHT + SEARCH_BAR_HEIGHT) // Click on a movie
+    {
+        draw_movie_info(window, event->events.mouse.y, pixel_offset, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
+        draw_movie_list_from_relative_pixel_offset(window, 0, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
+        SA_graphics_vram_flush(window);
+    }
+    else if (event->events.mouse.x < LIST_WIDTH && event->events.mouse.y > HEADER_HEIGHT && event->events.mouse.y <= HEADER_HEIGHT + SEARCH_BAR_HEIGHT)
+    {
+        *search_bar_highlight = SA_TRUE;
+    }
+    search_bar_highlight_redraw(window, *search_bar_highlight);
+    SA_graphics_vram_flush(window);
+}
+
+void event_handler_key_down(SA_GraphicsWindow* window, SA_GraphicsEvent* event, SA_bool* display_query, SA_bool* search_bar_highlight, int* selected_index, int* pixel_offset, const char* text_input_string, SA_GraphicsTextInput* text_input, SA_bool* query_has_results, ElevatorProperties* elevator_properties, SA_DynamicArray* films_stats, SA_DynamicArray* films_infos, SA_DynamicArray** film_stats_filtered)
+{
+    SA_DynamicArray* film_stats_to_count = *display_query ? *film_stats_filtered : films_stats;
+    if (!*search_bar_highlight)
+    {
+        if (event->events.key.keycode == 0x6f && *selected_index > 0) // Up arrow
+        {
+            *selected_index -= 1;
+            draw_movie_list_from_relative_pixel_offset(window, -LIST_ENTRY_HEIGHT, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, *film_stats_filtered);
+            draw_movie_info(window, *selected_index * LIST_ENTRY_HEIGHT - *pixel_offset + HEADER_HEIGHT + SEARCH_BAR_HEIGHT, pixel_offset, films_infos, films_stats, selected_index, display_query, *film_stats_filtered);
+            SA_graphics_vram_flush(window);
+        }
+        else if (event->events.key.keycode == 0x74 && (uint64_t) *selected_index < SA_dynarray_size(film_stats_to_count) - 1) // Down arrow
+        {
+            *selected_index += 1;
+            draw_movie_list_from_relative_pixel_offset(window, LIST_ENTRY_HEIGHT, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, *film_stats_filtered);
+            draw_movie_info(window, *selected_index * LIST_ENTRY_HEIGHT - *pixel_offset + HEADER_HEIGHT + SEARCH_BAR_HEIGHT, pixel_offset, films_infos, films_stats, selected_index, display_query, *film_stats_filtered);
+            SA_graphics_vram_flush(window);
+        }
+        return;
+    }
+    text_input_string = SA_graphics_get_text_input_value(text_input);
+    *display_query = (text_input_string[0] != '\0');
+    *query_has_results = movie_search(films_infos, films_stats, text_input_string, film_stats_filtered);
+    if (*query_has_results)
+    {
+        *selected_index = 0;
+        draw_movie_list_from_percentage_offset(window, 0.0, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, *film_stats_filtered);
+        draw_movie_info(window, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, pixel_offset, films_infos, films_stats, selected_index, display_query, *film_stats_filtered);
+        SA_graphics_vram_flush(window);
+    }
+    else
+    {
+        SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH / 2, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, WINDOW_HEIGHT, WINDOW_BACKGROUND, LIST_WIDTH);
+        SA_graphics_vram_draw_vertical_line(window, (WINDOW_WIDTH + LIST_WIDTH) / 2, HEADER_HEIGHT, WINDOW_HEIGHT, WINDOW_BACKGROUND, WINDOW_WIDTH - LIST_WIDTH);
+        SA_graphics_vram_flush(window);
+        *display_query = SA_FALSE;
+    }
+}
+
 /// @brief This function receives all the events linked to a window
 /// @param window The window that produced the event
 void draw_callback(SA_GraphicsWindow *window)
@@ -109,7 +177,7 @@ void draw_callback(SA_GraphicsWindow *window)
     do {
         if ((event_read = SA_graphics_wait_next_event(window, &event)))
         {
-            const char* text_input_string;
+            const char* text_input_string = NULL;
             SA_bool text_focus = SA_graphics_handle_text_input_events(text_input, &event);
             if(!text_focus)
             {
@@ -127,30 +195,7 @@ void draw_callback(SA_GraphicsWindow *window)
             switch(event.event_type)
             {
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_DOWN:
-                    if (!query_has_results)
-                    {
-                        break;
-                    }
-                    search_bar_highlight = SA_FALSE;
-                    if (event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.x < LIST_WIDTH) // Click (or hold) on elevator
-                    {
-                        elevator_properties.color = ELEVATOR_COLOR_CLICKED;
-                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                        SA_graphics_vram_flush(window);
-                        elevator_mouse_down = SA_TRUE;
-                    }
-                    else if (event.events.mouse.x < LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.y > HEADER_HEIGHT + SEARCH_BAR_HEIGHT) // Click on a movie
-                    {
-                        draw_movie_info(window, event.events.mouse.y, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                        draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                        SA_graphics_vram_flush(window);
-                    }
-                    else if (event.events.mouse.x < LIST_WIDTH && event.events.mouse.y > HEADER_HEIGHT && event.events.mouse.y <= HEADER_HEIGHT + SEARCH_BAR_HEIGHT)
-                    {
-                        search_bar_highlight = SA_TRUE;
-                    }
-                    search_bar_highlight_redraw(window, search_bar_highlight);
-                    SA_graphics_vram_flush(window);
+                    event_handler_mouse_down(window, &event, query_has_results, &search_bar_highlight, &elevator_properties, &elevator_mouse_down, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_UP:
                     elevator_properties.color = ELEVATOR_COLOR_DEFAULT;
@@ -204,45 +249,8 @@ void draw_callback(SA_GraphicsWindow *window)
                     }
                     break;
                 case SA_GRAPHICS_EVENT_KEY_DOWN:
-                {
-                    SA_DynamicArray* film_stats_to_count = display_query ? film_stats_filtered : films_stats;
-                    if (!search_bar_highlight)
-                    {
-                        if (event.events.key.keycode == 0x6f && selected_index > 0) // Up arrow
-                        {
-                            selected_index -= 1;
-                            draw_movie_list_from_relative_pixel_offset(window, -LIST_ENTRY_HEIGHT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                            draw_movie_info(window, selected_index * LIST_ENTRY_HEIGHT - pixel_offset + HEADER_HEIGHT + SEARCH_BAR_HEIGHT, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                            SA_graphics_vram_flush(window);
-                        }
-                        else if (event.events.key.keycode == 0x74 && (uint64_t) selected_index < SA_dynarray_size(film_stats_to_count) - 1) // Down arrow
-                        {
-                            selected_index += 1;
-                            draw_movie_list_from_relative_pixel_offset(window, LIST_ENTRY_HEIGHT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                            draw_movie_info(window, selected_index * LIST_ENTRY_HEIGHT - pixel_offset + HEADER_HEIGHT + SEARCH_BAR_HEIGHT, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                            SA_graphics_vram_flush(window);
-                        }
-                        break;
-                    }
-                    text_input_string = SA_graphics_get_text_input_value(text_input);
-                    display_query = (text_input_string[0] != '\0');
-                    query_has_results = movie_search(films_infos, films_stats, text_input_string, &film_stats_filtered);
-                    if (query_has_results)
-                    {
-                        draw_movie_list_from_percentage_offset(window, 0.0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                        selected_index = 0;
-                        draw_movie_info(window, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
-                        SA_graphics_vram_flush(window);
-                    }
-                    else
-                    {
-                        SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH / 2, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, WINDOW_HEIGHT, WINDOW_BACKGROUND, LIST_WIDTH);
-                        SA_graphics_vram_draw_vertical_line(window, (WINDOW_WIDTH + LIST_WIDTH) / 2, HEADER_HEIGHT, WINDOW_HEIGHT, WINDOW_BACKGROUND, WINDOW_WIDTH - LIST_WIDTH);
-                        SA_graphics_vram_flush(window);
-                        display_query = SA_FALSE;
-                    }
+                    event_handler_key_down(window, &event, &display_query, &search_bar_highlight, &selected_index, &pixel_offset, text_input_string, text_input, &query_has_results, &elevator_properties, films_stats, films_infos, &film_stats_filtered);
                     break;
-                }
                 case SA_GRAPHICS_EVENT_CLOSE_WINDOW:
                     SA_dynarray_free(&films_stats);
                     SA_dynarray_free(&films_infos);
