@@ -16,7 +16,7 @@ void print_usage()
         "-c \"X, Y\"\t\t\tOnly take into account the opinions of reviewers X, Y\n"
         "-b \"X, Y\"\t\t\tNot taking into account the opinions of reviewers X, Y\n"
         "-e MIN\t\t\t\tOnly take into account reviews from reviewers who have seen more than MIN films\n"
-        "-r FILEPATH\t\t\tMake recommendations with a file containing the list of film IDs you like\n"
+        "-r LIKED_FILMS_TEXT_FILE_PATH\tMake recommendations with a file containing the list of film IDs you like\n"
         "-i IN_DATA_BIN_FILE_PATH\tAlternative data binary file path"
     );
 }
