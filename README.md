@@ -42,7 +42,7 @@ xmake
 
 Pour forcer xmake à tout recompiler (équivalent de `make -B`), vous pouvez appeler `xmake -r`
 
-Une documentation doxygen est fournie, pour la générer, vous pouvez appeler `xmake doc` ou alors `doxygen` dans le dossier courant. Les fichiers de documentation se situeront alors dans le dossier `doc/html/`
+Une documentation doxygen est fournie, pour la générer, vous pouvez appeler `xmake docs` ou alors `doxygen` dans le dossier courant. Les fichiers de documentation se situeront alors dans le dossier `doc/html/`
 
 Pour obtenir une liste de recommandations avec le jeu de données fourni, vous pouvez appeler:
 
