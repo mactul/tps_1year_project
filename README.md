@@ -7,6 +7,9 @@
   - [Comment l'utiliser ?](#comment-lutiliser-)
   - [Structures binaires utilisées](#structures-binaires-utilisées)
   - [Détails et choix d'implémentation](#détails-et-choix-dimplémentation)
+    - [SystemAbstraction](#systemabstraction)
+    - [structures des fichiers](#structures-des-fichiers)
+    - [ligne de commande](#ligne-de-commande)
   - [Quelques données et statistiques](#quelques-données-et-statistiques)
 
 ## Qu'est-ce que c'est ?
@@ -164,11 +167,19 @@ stats.bin
 
 ## Détails et choix d'implémentation
 
-La GUI du projet est basée sur la surcouche graphique fournie par SystemAbstraction (abrégée en SA).
-SA a été créée pour pouvoir être branchée sur n'importe quelle bibliothèque graphique, mais pour l'instant, elle utilise X11, qui est la façon native de communiquer avec le gestionnaire de fenêtres sous Linux, cependant ce protocol est vieux et dépassé, ce qui nous a amené de nombreux problèmes.
-Un de ceux que nous n'avons pas put résoudre pour le moment est que l'une des fonctions de X11 (XLookupString) est mal conçue et ne libère pas la mémoire qu'elle alloue lors de la fermeture du programme.
+### SystemAbstraction
+
+Ce projet a mené a la création d'énormément de fonctions, qui auraient put être simplement mises dans le projet mais sont destinées à être utilisées ailleurs également.  
+Nous avons fait le choix de les inclure à la bibliothèque [SystemAbstraction](https://github.com/mactul/system_abstraction/tree/beta) (abrégée en SA), dont les commits des derniers mois sont exclusivement dédiés à fournir des fonctions pour ce projet.  
+Nous avons créé une branche `beta` sur ce repository, cette branche contiendra la version de la librairie à la fin du projet le 19/01/2024 (à l'exception peut-être de la documentation qui pourrait évoluer), les autres branches pourraient ne plus êtres compatibles car antérieures ou bien ayant subi des breaking changes.
+
+La GUI du projet est basée sur la surcouche graphique fournie par SA.  
+SA a été créée pour pouvoir être branchée sur n'importe quelle bibliothèque graphique, mais pour l'instant, elle utilise X11, qui est la façon native de communiquer avec le gestionnaire de fenêtres sous Linux, cependant ce protocol est vieux et dépassé, ce qui nous a amené de nombreux problèmes.  
+Un de ceux que nous n'avons pas put résoudre pour le moment est que l'une des fonctions de X11 (XLookupString) est mal conçue et ne libère pas la mémoire qu'elle alloue lors de la fermeture du programme.  
 Valgrind indique donc que des blocs sont non-libérés mais cela ne vient pas directement de notre code...
 
+
+### structures des fichiers
 
 La structure du fichier data.bin a été choisie car elle est quasiment identique aux données stockées en RAM mais à la place de pointeurs, on note la position du curseur dans le fichier.
 
@@ -176,7 +187,11 @@ La structure Rating est faite pour tenir sur 8 octets. Pour garder en mémoire l
 
 De même la structure du fichier stats.bin est une représentation directe de la RAM, elle peut donc être lue et écrite TRÈS rapidement.
 
-Certaines options de ligne de commande ont été rajoutées ou supprimées en fonction de ce qui nous paraissait plus pratique.
+### ligne de commande
+
+Chaque programme possède une aide, affichable a l'aide de `./bin/[program] -h`.
+
+Certaines options de ligne de commande ont été rajoutées ou supprimées en fonction de ce qui nous paraissait plus pratique.  
 Par exemple l'option `-f FOLDER` a été remplacé à chaque fois par `-o OUTPUT_FILE_PATH`, l'option `-s FILM_ID` a été supprimée car on peut effectuer une recherche par nom de film dans l'interface graphique, les films likés sont passés dans un fichier par l'option `-r LIKED_FILMS_FILE_PATH`, l'option `-n LIMIT` n'existe pas car toutes les suggestions sont affichées dans l'interface graphique, et l'option `-t TIMEOUT` n'est pas implémentée car on peut simplement lancer notre programme avec l'outil `timeout` qui génèrera un signal SIGINT.
 
 L'algorithme de recommandations fonctionne avec deux valeurs :
