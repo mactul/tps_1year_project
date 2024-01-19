@@ -1,12 +1,13 @@
 # Netflix Prize - Macéo Tuloup, Valentin Foulon
 
 ## Sommaire
-- [Sommaire](#sommaire)
-- [Qu'est-ce que c'est ?](#quest-ce-que-cest)
-- [Comment l'utiliser ?](#comment-lutiliser)
-- [Structures binaires utilisées](#structures-binaires-utilisées)
-- [Détails et choix d'implémentation](#détails-et-choix-dimplémentation)
-- [Quelques données](#quelques-données-et-statistiques)
+- [Netflix Prize - Macéo Tuloup, Valentin Foulon](#netflix-prize---macéo-tuloup-valentin-foulon)
+  - [Sommaire](#sommaire)
+  - [Qu'est-ce que c'est ?](#quest-ce-que-cest-)
+  - [Comment l'utiliser ?](#comment-lutiliser-)
+  - [Structures binaires utilisées](#structures-binaires-utilisées)
+  - [Détails et choix d'implémentation](#détails-et-choix-dimplémentation)
+  - [Quelques données et statistiques](#quelques-données-et-statistiques)
 
 ## Qu'est-ce que c'est ?
 Un projet qui fournit des recommandations de films à partir d'une base de données de notes par des utilisateurs de Netflix. Il est composé de trois programmes :
@@ -19,11 +20,10 @@ Un projet qui fournit des recommandations de films à partir d'une base de donn�
 
 La première étape est d'installer [xmake](https://xmake.io). Les instructions sont disponibles [ici](https://xmake.io/#/guide/installation).
 
-Ensuite il faut installer SystemAbstraction, la bibliothèque d'abstraction de Macéo, via la branche dev du repo git, puis le compiler et l'installer
+Ensuite il faut installer SystemAbstraction, la bibliothèque d'abstraction de Macéo, via la branche beta du repo git, puis la compiler et l'installer
 ```
-git clone https://github.com/mactul/system_abstraction -b dev
+git clone https://github.com/mactul/system_abstraction -b beta
 cd system_abstraction
-xmake f -m debug --build_tests=n --build_graphics=y --graphics_renderer=x11
 xmake
 xmake install
 ```
@@ -40,16 +40,24 @@ Pour forcer xmake à tout recompiler (équivalent de `make -B`), vous pouvez app
 
 Une documentation doxygen est fournie, pour la générer, vous pouvez appeler `xmake doc` ou alors `doxygen` dans le dossier courant. Les fichiers de documentation se situeront alors dans le dossier `doc/html/`
 
-Pour obtenir une liste de recommandations avec le jeu de données fourni, vous pouvez appeler dans l'ordre
+Pour obtenir une liste de recommandations avec le jeu de données fourni, vous pouvez appeler:
 
+D'abbord:
 ```
-./bin/film_parser download/training_set/mv_*.txt
-```
-
-```
-./bin/film_stats download/movie_titles.txt
+./bin/film_parser ./download/training_set/mv_*.txt
 ```
 
+Puis:
+```
+./bin/film_stats
+```
+ou mieux:
+```
+./bin/film_stats -r ./data/films_liked.txt
+```
+pour avoir des recommandations basées sur les films que vous aimez
+
+Enfin:
 ```
 ./bin/film_gui download/movie_titles.txt
 ```
@@ -156,11 +164,15 @@ stats.bin
 
 ## Détails et choix d'implémentation
 
-Le programme d'interface graphique utilise X11, c'est horrible mais ça fonctionne presque parfaitement, excepté pour la fonction XLookupString qui provoque une légère fuite de mémoire. Cela permet d'avoir une exécution rapide car on ne passe pas par une surcouche d'affichage.
+La GUI du projet est basée sur la surcouche graphique fournie par SystemAbstraction (abrégée en SA).
+SA a été créée pour pouvoir être branchée sur n'importe quelle bibliothèque graphique, mais pour l'instant, elle utilise X11, qui est la façon native de communiquer avec le gestionnaire de fenêtres sous Linux, cependant ce protocol est vieux et dépassé, ce qui nous a amené de nombreux problèmes.
+Un de ceux que nous n'avons pas put résoudre pour le moment est que l'une des fonctions de X11 (XLookupString) est mal conçue et ne libère pas la mémoire qu'elle alloue lors de la fermeture du programme.
+Valgrind indique donc que des blocs sont non-libérés mais cela ne vient pas directement de notre code...
+
 
 La structure du fichier data.bin a été choisie car elle est quasiment identique aux données stockées en RAM mais à la place de pointeurs, on note la position du curseur dans le fichier.
 
-La structure Rating est faite pour tenir sur 8 octets mais pour garder en mémoire l'année sur 1 octet, nous avons uniquement pu garder le nombre d'années depuis 1850 (YEARS_OFFSET). Chacune de ces structures dans notre fichier binaire est alors alignée sur 8 octets.
+La structure Rating est faite pour tenir sur 8 octets. Pour garder en mémoire l'année sur seulement 1 octet, nous avons gardé le nombre d'années depuis 1850 (YEARS_OFFSET). Chacune de ces structures dans notre fichier binaire est alors alignée sur 8 octets.
 
 De même la structure du fichier stats.bin est une représentation directe de la RAM, elle peut donc être lue et écrite TRÈS rapidement.
 
