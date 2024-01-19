@@ -38,6 +38,9 @@
 #define SEARCH_BG_COLOR 0x31363b
 #define SEARCH_BAR_PLACEHOLDER_COLOR 0xB0B0B0
 
+#define TITLE_PADDING_X 15
+#define DATE_PADDING_X 20
+
 #define FONT_WIDTH 6
 
 enum ELEVATOR_COLOR {
@@ -53,5 +56,7 @@ typedef struct _elevator_properties {
 
 
 void draw_star(SA_GraphicsWindow* window, double x, double y, float percent_filling);
+
+void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered);
 
 #endif

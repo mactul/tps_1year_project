@@ -13,89 +13,6 @@
 static GuiArguments _args_structure;
 static int _return_code;
 
-/// @brief Draw movie statistics in the info window
-/// @param window The window in which to draw
-/// @param mouse_y Vertical position of the cursor to find the movie index
-/// @param pixel_offset Offset of the list that is shown inside the window
-/// @param films_infos Array of structures containing the title and release year for every movie
-/// @param films_stats Array of structures containing stats about every movie
-/// @param selected_index Index of the currently selected film in the list
-/// @param display_query If the movie info should be fetched from the filtered array of film_stats
-/// @param film_stats_filtered Filtered array of structures containing stats about matched movies
-void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
-{
-    int movie_pixel_offset = mouse_y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT + *pixel_offset;
-    *selected_index = movie_pixel_offset / LIST_ENTRY_HEIGHT;
-
-    SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;
-
-    if ((uint64_t) *selected_index >= SA_dynarray_size(film_stats_to_use))
-    {
-        return; // Can't click on an empty element in the list
-    }
-
-    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH + 1, WINDOW_WIDTH, (WINDOW_HEIGHT - HEADER_HEIGHT) / 2 + HEADER_HEIGHT + 1, WINDOW_BACKGROUND, WINDOW_HEIGHT - HEADER_HEIGHT); // Clear main area
-
-    // Get film stats and infos
-    FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats_to_use, *selected_index);
-    FilmInfo* info = _SA_dynarray_get_element_ptr(films_infos, fstats->film_id);
-
-    SA_GraphicsRectangle graphics_rectangle_avg_ratings = {.height = GRAPH_HEIGHT, .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD, .top_left_corner_x = LIST_WIDTH + GRAPH_PAD, .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - 2 * GRAPH_HEIGHT - 2 * GRAPH_PAD};
-    SA_GraphicsRectangle graphics_rectangle_ratings_count = {.height = GRAPH_HEIGHT, .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD, .top_left_corner_x = LIST_WIDTH + GRAPH_PAD, .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - GRAPH_HEIGHT};
-    
-    double years[NUMBER_OF_YEARS_LOGGED_IN_STATS] = {0};
-    double ratings[NUMBER_OF_YEARS_LOGGED_IN_STATS];
-    double ratings_count[NUMBER_OF_YEARS_LOGGED_IN_STATS];
-    int ratings_total_count = 0;
-    double ratings_sum = 0;
-    double years_of_ratings_count = 0.0;
-
-    for (int i = 0; i < NUMBER_OF_YEARS_LOGGED_IN_STATS; i++)
-    {
-        years[i] = fstats->max_year - i;
-        ratings[i] = fstats->mean_rating_over_years[i] < 0 ? 0 : fstats->mean_rating_over_years[i];
-        ratings_count[i] = fstats->kept_rating_count_over_years[i];
-        ratings_total_count += fstats->kept_rating_count_over_years[i];
-        if(fstats->mean_rating_over_years[i] != -1)
-        {
-            ratings_sum += ratings[i];
-            years_of_ratings_count++;
-        }
-    }
-
-    SA_graphics_plot_continuous_graph(window, years, ratings, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_avg_ratings, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
-    SA_graphics_plot_continuous_graph(window, years, ratings_count, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_ratings_count, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
-
-    const char desc1[] = "Average note over years";
-    const char desc2[] = "Number of ratings per year";
-    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(desc1)) / 2 + LIST_WIDTH, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 20, desc1, WINDOW_FOREGROUND); // First graph title
-    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(desc2)) / 2 + LIST_WIDTH, graphics_rectangle_ratings_count.top_left_corner_y + graphics_rectangle_ratings_count.height + 20, desc2, WINDOW_FOREGROUND); // Second graph title
-    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 2 - SA_strlen(info->name) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 20, info->name, WINDOW_FOREGROUND); // Main area title (movie name)
-
-    SA_graphics_vram_draw_text(window, LIST_WIDTH + MARGIN_DESC_TEXT, HEADER_HEIGHT + 50, "Average note:", WINDOW_FOREGROUND);
-
-    double avg_note = ratings_sum / years_of_ratings_count;
-    for(int i = 0; i < 5; i++)
-    {
-        if(avg_note >= 1.0)
-        {
-            draw_star(window, LIST_WIDTH + MARGIN_DESC_TEXT + SA_strlen("Average note: ") * FONT_WIDTH + 40 * i, HEADER_HEIGHT + 40, 1.0);
-            avg_note -= 1.0;
-        }
-        else
-        {
-            draw_star(window, LIST_WIDTH + MARGIN_DESC_TEXT + SA_strlen("Average note: ") * FONT_WIDTH + 40 * i, HEADER_HEIGHT + 40, avg_note);
-            avg_note = 0.0;
-        }
-    }
-   
-    char rating_count_text[50] = "Number of rating over the last 10 years : ";
-    SA_uint64_to_str(rating_count_text + SA_strlen(rating_count_text), ratings_total_count);
-
-    SA_graphics_vram_draw_text(window, LIST_WIDTH + MARGIN_DESC_TEXT, HEADER_HEIGHT + 80, rating_count_text, WINDOW_FOREGROUND); // Main area title (movie name)
-
-    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH + GRAPH_PAD, WINDOW_WIDTH - GRAPH_PAD, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 30, WINDOW_FOREGROUND_ALTERNATE, 1); // Separator
-}
 
 /// @brief Redraws the scrollbar in a graphical window
 /// @param window Which window to draw the scrollbar in
@@ -146,7 +63,7 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
     SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH - (ELEVATOR_WIDTH / 2) - 1, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 1, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR, ELEVATOR_WIDTH); // Clear elevator track
     SA_graphics_vram_draw_vertical_line(window, (LIST_WIDTH - ELEVATOR_WIDTH) / 2, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 1, WINDOW_HEIGHT, WINDOW_BACKGROUND, (LIST_WIDTH - ELEVATOR_WIDTH)); // Clear list
 
-    char text_limited[(LIST_WIDTH - ELEVATOR_WIDTH) / FONT_WIDTH - 10] = {0};
+    char text_limited[(LIST_WIDTH - ELEVATOR_WIDTH - TITLE_PADDING_X) / FONT_WIDTH] = {0};
     char year[5] = {0};
 
     int max_i_value = MIN(movie_count, (WINDOW_HEIGHT - HEADER_HEIGHT - HEADER_HEIGHT) / LIST_ENTRY_HEIGHT + 1); // If there are less elements than what can be displayed, limit the for loop
@@ -194,10 +111,15 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
         // Get film text and year and display them
         FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats_to_use, element + i);
         FilmInfo* info = _SA_dynarray_get_element_ptr(films_infos, fstats->film_id);
-        SA_strncpy(text_limited, info->name, sizeof(text_limited));
-        snprintf(year, 5, "%hd", info->year);
-        SA_graphics_vram_draw_text(window, 15, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 35, text_limited, fg_color);
-        SA_graphics_vram_draw_text(window, 20, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 60, year, fg_color_alt);
+
+        if(SA_strncpy(text_limited, info->name, sizeof(text_limited)-3) == sizeof(text_limited)-4)
+        {
+            SA_strcat(text_limited, "...");
+        }
+
+        SA_uint64_to_str(year, info->year);
+        SA_graphics_vram_draw_text(window, TITLE_PADDING_X, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 35, text_limited, fg_color);
+        SA_graphics_vram_draw_text(window, DATE_PADDING_X, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 60, year, fg_color_alt);
     }
 
     elevator_properties->position_y = percentage * (WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT) + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
