@@ -8,6 +8,8 @@
 
 #include <math.h>
 
+#define MIN(a, b) (a > b ? b : a)
+
 static GuiArguments _args_structure;
 static int _return_code;
 
@@ -17,15 +19,20 @@ static int _return_code;
 /// @param pixel_offset Offset of the list that is shown inside the window
 /// @param films_infos Array of structures containing the title and release year for every movie
 /// @param films_stats Array of structures containing stats about every movie
-void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index)
+/// @param selected_index Index of the currently selected film in the list
+/// @param display_query If the movie info should be fetched from the filtered array of film_stats
+/// @param film_stats_filtered Filtered array of structures containing stats about matched movies
+void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
 {
     SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH + 1, WINDOW_WIDTH, (WINDOW_HEIGHT - HEADER_HEIGHT) / 2 + HEADER_HEIGHT + 1, WINDOW_BACKGROUND, WINDOW_HEIGHT - HEADER_HEIGHT); // Clear main area
 
-    int movie_pixel_offset = mouse_y - HEADER_HEIGHT + *pixel_offset;
+    int movie_pixel_offset = mouse_y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT + *pixel_offset;
     *selected_index = movie_pixel_offset / LIST_ENTRY_HEIGHT;
 
+    SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;
+
     // Get film stats and infos
-    FilmStats* fstats = _SA_dynarray_get_element_ptr(films_stats, *selected_index);
+    FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats_to_use, *selected_index);
     FilmInfo* info = _SA_dynarray_get_element_ptr(films_infos, fstats->film_id);
 
     SA_GraphicsRectangle graphics_rectangle_avg_ratings = {.height = GRAPH_HEIGHT, .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD, .top_left_corner_x = LIST_WIDTH + GRAPH_PAD, .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - 2 * GRAPH_HEIGHT - 2 * GRAPH_PAD};
@@ -36,7 +43,7 @@ void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_off
     double ratings_count[NUMBER_OF_YEARS_LOGGED_IN_STATS];
     int ratings_total_count = 0;
     double ratings_sum = 0;
-    double years_of_ratings_count;
+    double years_of_ratings_count = 0.0;
 
     for (int i = 0; i < NUMBER_OF_YEARS_LOGGED_IN_STATS; i++)
     {
@@ -63,7 +70,6 @@ void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_off
     SA_graphics_vram_draw_text(window, LIST_WIDTH + MARGIN_DESC_TEXT, HEADER_HEIGHT + 50, "Average note:", WINDOW_FOREGROUND);
 
     double avg_note = ratings_sum / years_of_ratings_count;
-    printf("%f\n", avg_note);
     for(int i = 0; i < 5; i++)
     {
         if(avg_note >= 1.0)
@@ -101,7 +107,7 @@ void redraw_elevator(SA_GraphicsWindow* window, ElevatorProperties* elevator_pro
 /// @param elevator_properties Pointer to properties of the scrollbar
 /// @param films_infos Array of structures containing the title and release year for every movie
 /// @param films_stats Array of structures containing stats about every movie
-void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index)
+void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
 {
     if (percentage < 0)
     {
@@ -112,28 +118,38 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
         percentage = 1;
     }
 
-    int movie_count = SA_dynarray_size(films_stats);
-    int list_height = (movie_count * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT + HEADER_HEIGHT;
+    SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;
+
+    int movie_count = SA_dynarray_size(film_stats_to_use);
+    int list_height = (movie_count * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
+
     *pixel_offset = round(list_height * percentage); // Where we are in the list
+
+    if (list_height <= 0)
+    {
+        *pixel_offset = 0;
+    }
 
     int element = *pixel_offset / LIST_ENTRY_HEIGHT; // Which element is the first partially visible
 
-    SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH - (ELEVATOR_WIDTH / 2) - 1, HEADER_HEIGHT + 1, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR, ELEVATOR_WIDTH); // Clear elevator track
-    SA_graphics_vram_draw_vertical_line(window, (LIST_WIDTH - ELEVATOR_WIDTH) / 2, HEADER_HEIGHT + 1, WINDOW_HEIGHT, WINDOW_BACKGROUND, (LIST_WIDTH - ELEVATOR_WIDTH)); // Clear list
+    SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH - (ELEVATOR_WIDTH / 2) - 1, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 1, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR, ELEVATOR_WIDTH); // Clear elevator track
+    SA_graphics_vram_draw_vertical_line(window, (LIST_WIDTH - ELEVATOR_WIDTH) / 2, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 1, WINDOW_HEIGHT, WINDOW_BACKGROUND, (LIST_WIDTH - ELEVATOR_WIDTH)); // Clear list
 
     char text_limited[WINDOW_WIDTH / FONT_WIDTH - 20] = {0};
     char year[5] = {0};
 
-    for (int i = 0; i < (WINDOW_HEIGHT - HEADER_HEIGHT) / LIST_ENTRY_HEIGHT + 1; i++)
+    int max_i_value = MIN(movie_count, (WINDOW_HEIGHT - HEADER_HEIGHT - HEADER_HEIGHT) / LIST_ENTRY_HEIGHT + 1); // If there are less elements than what can be displayed, limit the for loop
+
+    for (int i = 0; i < max_i_value; i++)
     {
-        if (i == 0 && ((element & 1) == 1)) // Hack to color the first partially visible entry's background
+        if (i == 0 && ((element & 1) == 0)) // Hack to color the first partially visible entry's background
         {
-            int bottom = HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT;
-            SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, (bottom + HEADER_HEIGHT) / 2, WINDOW_BACKGROUND_ALTERNATE, bottom - HEADER_HEIGHT);
+            int bottom = HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT;
+            SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, (bottom + HEADER_HEIGHT + SEARCH_BAR_HEIGHT) / 2, WINDOW_BACKGROUND_ALTERNATE, bottom - HEADER_HEIGHT - SEARCH_BAR_HEIGHT);
         }
-        if (((element + i) & 1) == 0) // Alternate two background colors in the list
+        else if (((element + i) & 1) == 0) // Alternate two background colors in the list
         {
-            SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_ALTERNATE, LIST_ENTRY_HEIGHT);
+            SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_ALTERNATE, LIST_ENTRY_HEIGHT);
         }
 
         uint32_t fg_color_alt = WINDOW_FOREGROUND_ALTERNATE;
@@ -143,37 +159,37 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
         {
             if (i == 0)
             {
-                int bottom = HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT;
-                SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, (bottom + HEADER_HEIGHT) / 2, WINDOW_BACKGROUND_SELECTED, bottom - HEADER_HEIGHT);
+                int bottom = HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT;
+                SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, (bottom + HEADER_HEIGHT + SEARCH_BAR_HEIGHT) / 2, WINDOW_BACKGROUND_SELECTED, bottom - HEADER_HEIGHT - SEARCH_BAR_HEIGHT);
             }
             else
             {
-                SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_SELECTED, LIST_ENTRY_HEIGHT);
+                SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_SELECTED, LIST_ENTRY_HEIGHT);
             }
             fg_color = fg_color_alt = WINDOW_FOREGROUND_SELECTED;
         }
         else if (element + i + 1 == *selected_index)
         {
-            SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_SELECTED, LIST_ENTRY_HEIGHT);
+            SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_SELECTED, LIST_ENTRY_HEIGHT);
         }
 
-        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, WINDOW_FOREGROUND, 1); // List separator
+        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, WINDOW_FOREGROUND, 1); // List separator
 
-        if (HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 25 <= HEADER_HEIGHT) // Don't display text if it will be hidden by the header
+        if (i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 25 <= 0) // Don't display text if it will be hidden by the header
         {
             continue;
         }
 
         // Get film text and year and display them
-        FilmStats* fstats = _SA_dynarray_get_element_ptr(films_stats, element + i);
+        FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats_to_use, element + i);
         FilmInfo* info = _SA_dynarray_get_element_ptr(films_infos, fstats->film_id);
         SA_strncpy(text_limited, info->name, sizeof(text_limited));
         snprintf(year, 5, "%hd", info->year);
-        SA_graphics_vram_draw_text(window, 15, HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 35, text_limited, fg_color);
-        SA_graphics_vram_draw_text(window, 20, HEADER_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 60, year, fg_color_alt);
+        SA_graphics_vram_draw_text(window, 15, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 35, text_limited, fg_color);
+        SA_graphics_vram_draw_text(window, 20, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 60, year, fg_color_alt);
     }
 
-    elevator_properties->position_y = percentage * (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT) + HEADER_HEIGHT;
+    elevator_properties->position_y = percentage * (WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT) + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
     redraw_elevator(window, elevator_properties);
 }
 
@@ -184,29 +200,63 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
 /// @param elevator_properties Pointer to properties of the scrollbar
 /// @param films_infos Array of structures containing the title and release year for every movie
 /// @param films_stats Array of structures containing stats about every movie
-void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int direction, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index)
+void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int direction, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
 {
-    int movie_count = SA_dynarray_size(films_stats);
-    int list_height = (movie_count * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT + HEADER_HEIGHT;
+    SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;
+    int movie_count = SA_dynarray_size(film_stats_to_use);
+    int list_height = (movie_count * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
+
+    if (list_height <= 0)
+    {
+        return;
+    }
 
     // Compute percentage based on the position in the list
     if (*pixel_offset + direction < 0)
     {
         *pixel_offset = 0;
         double percentage = (double) *pixel_offset / list_height;
-        draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index);
+        draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
         return;
     }
     if (*pixel_offset + direction > list_height)
     {
         *pixel_offset = list_height;
         double percentage = (double) *pixel_offset / list_height;
-        draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index);
+        draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
         return;
     }
     *pixel_offset += direction;
     double percentage = (double) *pixel_offset / list_height;
-    draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index);
+    draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
+}
+
+/// @brief Finds all films in film_stats where the corresponding entry in film_infos matches a search pattern and copies them in film_stats_filtered
+/// @param film_infos Array of FilmInfo
+/// @param film_stats Source (unfiltered) array of FilmStats
+/// @param substring Search pattern
+/// @param film_stats_filtered Destination (filtered) array of FilmStats
+/// @return SA_FALSE if no film titles matches, SA_TRUE if there is at least one match
+SA_bool movie_search(SA_DynamicArray* film_infos, SA_DynamicArray* film_stats, const char* substring, SA_DynamicArray** film_stats_filtered)
+{
+    int string_length = SA_strlen(substring);
+    SA_dynarray_free(film_stats_filtered);
+    *film_stats_filtered = SA_dynarray_create(FilmStats);
+    char* film_name;
+    FilmStats current_film_stat;
+    FilmInfo* current_film_info;
+    for (int i = 0; i < SA_dynarray_size(film_stats); i++)
+    {
+        current_film_stat = SA_dynarray_get(FilmStats, film_stats, i);
+        current_film_info = _SA_dynarray_get_element_ptr(film_infos, current_film_stat.film_id);
+        film_name = current_film_info->name;
+        if (SA_str_search_case_unsensitive(film_name, substring) == -1)
+        {
+            continue;
+        }
+        SA_dynarray_append(FilmStats, *film_stats_filtered, current_film_stat);
+    }
+    return SA_dynarray_size(*film_stats_filtered) != 0;
 }
 
 /// @brief This function receives all the events linked to a window
@@ -221,6 +271,9 @@ void draw_callback(SA_GraphicsWindow *window)
     SA_graphics_vram_draw_text(window, WINDOW_HEIGHT / 2 + 20, (WINDOW_WIDTH - SA_strlen(wait_text2)) / 2, wait_text2, WINDOW_FOREGROUND);
 
     int selected_index = 0;
+    SA_bool display_query = SA_FALSE;
+    SA_bool query_has_results = SA_TRUE;
+    SA_DynamicArray* film_stats_filtered = NULL;
 
     SA_DynamicArray* films_infos = get_films_infos("download/movie_titles.txt");
 
@@ -248,9 +301,13 @@ void draw_callback(SA_GraphicsWindow *window)
     SA_EventMouse cursor_properties = {.x = 0, .y = 0};
     SA_graphics_vram_draw_horizontal_line(window, 0, WINDOW_WIDTH, HEADER_HEIGHT, WINDOW_FOREGROUND, 2);
     SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH, HEADER_HEIGHT, WINDOW_HEIGHT, WINDOW_FOREGROUND, 2);
-    draw_movie_list_from_percentage_offset(window,  0.0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index);
+    draw_movie_list_from_percentage_offset(window,  0.0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
     
-    draw_movie_info(window, HEADER_HEIGHT + 1, &pixel_offset, films_infos, films_stats, &selected_index);
+    draw_movie_info(window, HEADER_HEIGHT + 1, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
+
+    SA_GraphicsTextInput* text_input = SA_graphics_create_text_input(window, 0, HEADER_HEIGHT, 0xFF0000, WINDOW_FOREGROUND, 80, 10, 14);
+    // 12 is font height in below call
+    SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", WINDOW_FOREGROUND_SELECTED);
 
     //draw_star(window, 800, 130);
 
@@ -261,38 +318,49 @@ void draw_callback(SA_GraphicsWindow *window)
 
     SA_bool elevator_mouse_down = SA_FALSE;
 
+    const char* text_input_string;
+
     do {
         if ((event_read = SA_graphics_wait_next_event(window, &event)))
         {
+            SA_graphics_handle_text_input_events(text_input, &event);
             switch(event.event_type)
             {
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_DOWN:
+                    if (!query_has_results)
+                    {
+                        break;
+                    }
                     if (event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.x < LIST_WIDTH) // Click (or hold) on elevator
                     {
                         elevator_properties.color = ELEVATOR_COLOR_CLICKED;
-                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index);
+                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                         SA_graphics_vram_flush(window);
                         elevator_mouse_down = SA_TRUE;
                     }
-                    else if (event.events.mouse.x < LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.y > HEADER_HEIGHT) // Click on a movie
+                    else if (event.events.mouse.x < LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.y > HEADER_HEIGHT + SEARCH_BAR_HEIGHT) // Click on a movie
                     {
-                        draw_movie_info(window, event.events.mouse.y, &pixel_offset, films_infos, films_stats, &selected_index);
-                        draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index);
+                        draw_movie_info(window, event.events.mouse.y, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
+                        draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                         SA_graphics_vram_flush(window);
                     }
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_UP:
                     elevator_properties.color = ELEVATOR_COLOR_DEFAULT;
-                    draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index);
+                    draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                     SA_graphics_vram_flush(window);
                     elevator_mouse_down = SA_FALSE;
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_MOVE:
+                    if (!query_has_results)
+                    {
+                        break;
+                    }
                     cursor_properties = event.events.mouse;
                     if (elevator_mouse_down == SA_TRUE) // Moving the elevator
                     {
                         elevator_properties.color = ELEVATOR_COLOR_CLICKED;
-                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index);
+                        draw_movie_list_from_percentage_offset(window, ((double) ((int) event.events.mouse.y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT / 2)) / (WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT), &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                     }
                     else if ((int) event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && (int) event.events.mouse.x <= LIST_WIDTH && (int) event.events.mouse.y >= elevator_properties.position_y && (int) event.events.mouse.y <= elevator_properties.position_y + ELEVATOR_HEIGHT) // Hover over the elevator
                     {
@@ -307,22 +375,58 @@ void draw_callback(SA_GraphicsWindow *window)
                     SA_graphics_vram_flush(window);
                     break;
                 case SA_GRAPHICS_EVENT_SCROLL_UP:
+                    if (!query_has_results)
+                    {
+                        break;
+                    }
                     if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT) // Scrolling in list
                     {
-                        draw_movie_list_from_relative_pixel_offset(window, -SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index);
+                        draw_movie_list_from_relative_pixel_offset(window, -SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                         SA_graphics_vram_flush(window);
                     }
                     break;
                 case SA_GRAPHICS_EVENT_SCROLL_DOWN:
+                    if (!query_has_results)
+                    {
+                        break;
+                    }
                     if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT) // Scrolling in list
                     {
-                        draw_movie_list_from_relative_pixel_offset(window, SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index);
+                        draw_movie_list_from_relative_pixel_offset(window, SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                         SA_graphics_vram_flush(window);
+                    }
+                    break;
+                case SA_GRAPHICS_EVENT_KEY_DOWN:
+                    display_query = SA_TRUE;
+                    text_input_string = SA_graphics_get_text_input_value(text_input);
+                    printf("0x%x\n", event.events.key.keycode);
+                    if (SA_strlen(text_input_string) == 0)
+                    {
+                        SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", WINDOW_FOREGROUND_SELECTED);
+                        display_query = SA_FALSE;
+                    }
+                    SA_graphics_vram_flush(window);
+                    query_has_results = movie_search(films_infos, films_stats, text_input_string, &film_stats_filtered);
+                    if (query_has_results)
+                    {
+                        draw_movie_list_from_percentage_offset(window, 0.0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
+                        selected_index = 0;
+                        draw_movie_info(window, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
+                        SA_graphics_vram_flush(window);
+                    }
+                    else
+                    {
+                        SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH / 2, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, WINDOW_HEIGHT, WINDOW_BACKGROUND, LIST_WIDTH);
+                        SA_graphics_vram_draw_vertical_line(window, (WINDOW_WIDTH + LIST_WIDTH) / 2, HEADER_HEIGHT, WINDOW_HEIGHT, WINDOW_BACKGROUND, WINDOW_WIDTH - LIST_WIDTH);
+                        SA_graphics_vram_flush(window);
+                        display_query = SA_FALSE;
                     }
                     break;
                 case SA_GRAPHICS_EVENT_CLOSE_WINDOW:
                     SA_dynarray_free(&films_stats);
                     SA_dynarray_free(&films_infos);
+                    SA_dynarray_free(&film_stats_filtered);
+                    SA_graphics_free_text_input(&text_input);
                     printf("Bye bye\n");
                 default:
                     break;
@@ -331,7 +435,7 @@ void draw_callback(SA_GraphicsWindow *window)
     } while (!event_read || event.event_type != SA_GRAPHICS_EVENT_CLOSE_WINDOW);
 }
 
-/// @brief Start the whole program
+/// @brief This program shows all the recommendations in a graphical window
 /// @param argc Number of command line arguments
 /// @param argv Array of command line arguments
 /// @return 
