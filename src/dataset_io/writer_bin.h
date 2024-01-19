@@ -4,7 +4,7 @@
 #include "src/data_structs.h"
 
 /*
-Format du fichier binaire
+Binary file format
 
  63    56|55    48|47    40|39    32|31    24|23    16|15     8|7      0
  
