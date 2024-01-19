@@ -10,6 +10,7 @@
     - [SystemAbstraction](#systemabstraction)
     - [structures des fichiers](#structures-des-fichiers)
     - [ligne de commande](#ligne-de-commande)
+    - [Tests](#tests)
   - [Quelques données et statistiques](#quelques-données-et-statistiques)
 
 ## Qu'est-ce que c'est ?
@@ -199,6 +200,14 @@ L'algorithme de recommandations fonctionne avec deux valeurs :
 - en calculant la note moyenne d'un film, on peut déterminer si il plaira à un grand public ou non
 
 Avec ces deux valeurs, on calcule une valeur de recommandation entre 0 et 1, 0 signifiant que le film n'est pas du tout recommandé.
+
+
+### Tests
+
+Nous n'avons pas fait de section de tests unitaire directement dans le projet, car aucune fonction ne se prettait vraiment à cette exercice.  
+Toutes les fonctions qui font des opérations génériques facilement testables se sont retrouvées dans SA, et elles sont testées si l'on configure xmake avec `xmake f --build_tests=y`.  
+Dans le projet, nous avons en revanche choisi de tester la résistance de nos programmes à des arguments incohérents, trop d'arguments, pas assez, des fichiers inexistants, etc...  
+Cela se fait grace au fichier `tests/tests.sh` qui peut-être éxecuté depuis n'importe où.
 
 ## Quelques données et statistiques
 
