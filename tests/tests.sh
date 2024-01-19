@@ -18,23 +18,23 @@ exec_silent_test() {
 
 BASEDIR=$(dirname "$0")
 pushd $BASEDIR/..
-echo "rm -vf ./data/*.bin"
-rm -vf ./data/*.bin
+echo "rm -vf ./data/test_*.bin"
+rm -vf ./data/test_*.bin
 
-exec_silent_test 3 ./bin/film_gui
-exec_silent_test 3 ./bin/film_gui ./download/movie_titles.txt ./download/movie_titles.txt
-exec_silent_test 3 ./bin/film_gui -z toto ./download/movie_titles.txt
-exec_silent_test 2 ./bin/film_gui ./download/ce_fichier_n_existe_pas.txt
+exec_silent_test 3 ./bin/film_gui -i ./data/test_film_stats.bin
+exec_silent_test 3 ./bin/film_gui -i ./data/test_film_stats.bin ./download/movie_titles.txt ./download/movie_titles.txt
+exec_silent_test 3 ./bin/film_gui -i ./data/test_film_stats.bin -z toto ./download/movie_titles.txt
+exec_silent_test 2 ./bin/film_gui -i ./data/test_film_stats.bin ./download/ce_fichier_n_existe_pas.txt
 
-exec_silent_test 3 ./bin/film_stats ./download/movie_titles.txt
-exec_silent_test 3 ./bin/film_stats -z toto
-exec_silent_test 2 ./bin/film_stats
+exec_silent_test 3 ./bin/film_stats -i ./data/test_film_data.bin -o ./data/test_film_stats.bin ./download/movie_titles.txt
+exec_silent_test 3 ./bin/film_stats -i ./data/test_film_data.bin -o ./data/test_film_stats.bin -z toto
+exec_silent_test 2 ./bin/film_stats -i ./data/test_film_data.bin -o ./data/test_film_stats.bin
 
-exec_silent_test 3 ./bin/film_parser
-exec_silent_test 3 ./bin/film_parser -z toto ./download/training_set/mv_0000001.txt
-exec_silent_test 2 ./bin/film_parser ./download/training_set/mv_0000001.txt ./download/training_set/ce_fichier_nexiste_pas.txt
-exec_silent_test 4 timeout -s SIGINT --preserve-status 5 ./bin/film_parser ./download/training_set/mv_*.txt
-exec_silent_test 0 ./bin/film_parser ./download/training_set/mv_00000*.txt
+exec_silent_test 3 ./bin/film_parser -o ./data/test_film_data.bin
+exec_silent_test 3 ./bin/film_parser -o ./data/test_film_data.bin -z toto ./download/training_set/mv_0000001.txt
+exec_silent_test 2 ./bin/film_parser -o ./data/test_film_data.bin ./download/training_set/mv_0000001.txt ./download/training_set/ce_fichier_nexiste_pas.txt
+exec_silent_test 4 timeout -s SIGINT --preserve-status 5 ./bin/film_parser -o ./data/test_film_data.bin ./download/training_set/mv_*.txt
+exec_silent_test 0 ./bin/film_parser -o ./data/test_film_data.bin ./download/training_set/mv_00000*.txt
 
 exec_silent_test 0 ./bin/film_stats
 
@@ -46,11 +46,11 @@ exec_silent_test 0 ./bin/film_gui ./download/movie_titles.txt
 echo "-----------------------------------------------------"
 echo "Tests with valgrind (on a small dataset)"
 
-exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_parser ./download/training_set/mv_00000*.txt
-exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_stats
+exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_parser -o ./data/test_film_data.bin ./download/training_set/mv_00000*.txt
+exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_stats -i ./data/test_film_data.bin -o ./data/test_film_stats.bin
 
 echo -ne "\033[34mFor this next test, you will have to close the window once it is opened, press any key to continue\033[0m"
 read -n 1 arg
-exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_gui ./download/movie_titles.txt
+exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_gui -i ./data/test_film_stats.bin ./download/movie_titles.txt
 
 popd
