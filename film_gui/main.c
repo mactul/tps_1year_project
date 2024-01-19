@@ -39,6 +39,16 @@ SA_bool movie_search(SA_DynamicArray* film_infos, SA_DynamicArray* film_stats, c
     return SA_dynarray_size(*film_stats_filtered) != 0;
 }
 
+/// @brief Draw a highlight around the search bar inside a window
+/// @param window The window to draw in
+/// @param do_highlight If the highlight should be visible or "hidden"
+void search_bar_highlight_redraw(SA_GraphicsWindow* window, SA_bool do_highlight)
+{
+    uint32_t outline_color = do_highlight == SA_TRUE ? WINDOW_BACKGROUND_SELECTED : SEARCH_BG_COLOR;
+    SA_graphics_vram_draw_hollow_rectangle(window, 0, HEADER_HEIGHT, LIST_WIDTH - 1, SEARCH_BAR_HEIGHT - 1, outline_color, 1);
+    SA_graphics_vram_draw_hollow_rectangle(window, 500, 500, 200, 200, 0xFF0000, 1);
+}
+
 /// @brief This function receives all the events linked to a window
 /// @param window The window that produced the event
 void draw_callback(SA_GraphicsWindow *window)
@@ -53,6 +63,7 @@ void draw_callback(SA_GraphicsWindow *window)
     int selected_index = 0;
     SA_bool display_query = SA_FALSE;
     SA_bool query_has_results = SA_TRUE;
+    SA_bool search_bar_highlight = SA_FALSE;
     SA_DynamicArray* film_stats_filtered = NULL;
 
     SA_DynamicArray* films_infos = get_films_infos("download/movie_titles.txt");
@@ -85,9 +96,10 @@ void draw_callback(SA_GraphicsWindow *window)
     
     draw_movie_info(window, HEADER_HEIGHT + 1, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
 
-    SA_GraphicsTextInput* text_input = SA_graphics_create_text_input(window, 0, HEADER_HEIGHT, SEARCH_BG_COLOR, WINDOW_FOREGROUND_SELECTED, 80, 10, 14);
+    SA_GraphicsTextInput* text_input = SA_graphics_create_text_input(window, 1, HEADER_HEIGHT + 1, SEARCH_BG_COLOR, WINDOW_FOREGROUND_SELECTED, 80, 9, 13);
     // 12 is font height in below call
     SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", SEARCH_BAR_PLACEHOLDER_COLOR);
+    search_bar_highlight_redraw(window, search_bar_highlight);
 
     SA_graphics_vram_flush(window);
 
@@ -121,6 +133,7 @@ void draw_callback(SA_GraphicsWindow *window)
                     {
                         break;
                     }
+                    search_bar_highlight = SA_FALSE;
                     if (event.events.mouse.x >= LIST_WIDTH - ELEVATOR_WIDTH && event.events.mouse.x < LIST_WIDTH) // Click (or hold) on elevator
                     {
                         elevator_properties.color = ELEVATOR_COLOR_CLICKED;
@@ -134,10 +147,17 @@ void draw_callback(SA_GraphicsWindow *window)
                         draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                         SA_graphics_vram_flush(window);
                     }
+                    else if (event.events.mouse.x < LIST_WIDTH && event.events.mouse.y > HEADER_HEIGHT && event.events.mouse.y <= HEADER_HEIGHT + SEARCH_BAR_HEIGHT)
+                    {
+                        search_bar_highlight = SA_TRUE;
+                    }
+                    search_bar_highlight_redraw(window, search_bar_highlight);
+                    SA_graphics_vram_flush(window);
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_UP:
                     elevator_properties.color = ELEVATOR_COLOR_DEFAULT;
                     redraw_elevator(window, &elevator_properties);
+                    search_bar_highlight_redraw(window, search_bar_highlight);
                     // draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                     SA_graphics_vram_flush(window);
                     elevator_mouse_down = SA_FALSE;
@@ -147,6 +167,8 @@ void draw_callback(SA_GraphicsWindow *window)
                     {
                         break;
                     }
+                    search_bar_highlight_redraw(window, search_bar_highlight);
+                    SA_graphics_vram_flush(window);
                     cursor_properties = event.events.mouse;
                     if (elevator_mouse_down == SA_TRUE) // Moving the elevator
                     {
@@ -170,6 +192,8 @@ void draw_callback(SA_GraphicsWindow *window)
                     {
                         break;
                     }
+                    search_bar_highlight_redraw(window, search_bar_highlight);
+                    SA_graphics_vram_flush(window);
                     if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT) // Scrolling in list
                     {
                         draw_movie_list_from_relative_pixel_offset(window, -SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
@@ -181,6 +205,7 @@ void draw_callback(SA_GraphicsWindow *window)
                     {
                         break;
                     }
+                    search_bar_highlight_redraw(window, search_bar_highlight);
                     if ((int) cursor_properties.x <= LIST_WIDTH && (int) cursor_properties.y >= HEADER_HEIGHT) // Scrolling in list
                     {
                         draw_movie_list_from_relative_pixel_offset(window, SCROLL_PIXEL_COUNT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
@@ -191,6 +216,8 @@ void draw_callback(SA_GraphicsWindow *window)
                     text_input_string = SA_graphics_get_text_input_value(text_input);
                     display_query = (text_input_string[0] != '\0');
                     query_has_results = movie_search(films_infos, films_stats, text_input_string, &film_stats_filtered);
+                    search_bar_highlight_redraw(window, search_bar_highlight);
+                    SA_graphics_vram_flush(window);
                     if (query_has_results)
                     {
                         draw_movie_list_from_percentage_offset(window, 0.0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);

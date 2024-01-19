@@ -167,7 +167,11 @@ De même la structure du fichier stats.bin est une représentation directe de la
 Certaines options de ligne de commande ont été rajoutées ou supprimées en fonction de ce qui nous paraissait plus pratique.
 Par exemple l'option `-f FOLDER` a été remplacé à chaque fois par `-o OUTPUT_FILE_PATH`, l'option `-s FILM_ID` a été supprimée car on peut effectuer une recherche par nom de film dans l'interface graphique, les films likés sont passés dans un fichier par l'option `-r LIKED_FILMS_FILE_PATH`, l'option `-n LIMIT` n'existe pas car toutes les suggestions sont affichées dans l'interface graphique, et l'option `-t TIMEOUT` n'est pas implémentée car on peut simplement lancer notre programme avec l'outil `timeout` qui génèrera un signal SIGINT.
 
-L'algorithme de recommandations fonctionne en 
+L'algorithme de recommandations fonctionne avec deux valeurs :
+- en calculant la distance de chaque film à l'ensemble des films likés en prenant en compte le biais de notation de chaque utilisateur (par exemple un 4 donné par un utilisateur qui met tout le temps des 5 ne vaut pas autant qu'un 4 donné par un utilisateur qui met tout le temps des 3). Plus un film est "proche" des films likés, plus il est recommandé.
+- en calculant la note moyenne d'un film, on peut déterminer si il plaira à un grand public ou non
+
+Avec ces deux valeurs, on calcule une valeur de recommandation entre 0 et 1, 0 signifiant que le film n'est pas du tout recommandé.
 
 ## Quelques données et statistiques
 
