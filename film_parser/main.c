@@ -15,7 +15,7 @@ volatile sig_atomic_t _interruption_requested;
 /// @return 
 /// * RETURN_CODE_OK if everything went correctly
 /// * RETURN_CODE_ERROR_MEMORY if there was a memory allocation error
-/// * RETURN_CODE_ERROR_FILE_NOT_FOUND if the movie file doesn't exist
+/// * RETURN_CODE_ERROR_FILE if the movie file doesn't exist
 /// * RETURN_CODE_ERROR_ARGUMENTS if the command line arguments are incorrect
 /// * RETURN_CODE_SIGNAL_ABORT if the user cancelled the program
 int main(int argc, char* argv[])
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     {
         if (read_movie_file(films, argv[i]) != 0)
         {
-            exit_code = RETURN_CODE_ERROR_FILE_NOT_FOUND;
+            exit_code = RETURN_CODE_ERROR_FILE;
             goto EXIT_LBL;
         }
     }
@@ -70,5 +70,23 @@ EXIT_LBL:
     films_list_free(&films);
 
     SA_destroy();
+
+    switch(exit_code)
+    {
+        case RETURN_CODE_ERROR_MEMORY:
+            SA_print_error("Memory error\n");
+            break;
+        case RETURN_CODE_ERROR_FILE:
+            SA_print_error("File I/O error\n");
+            break;
+        case RETURN_CODE_ERROR_ARGUMENTS:
+            SA_print_error("Invalid arguments\n");
+            break;
+        case RETURN_CODE_SIGNAL_ABORT:
+            SA_print_error("Stopped by user\n");
+            break;
+        default:
+            break;
+    }
     return exit_code;
 }

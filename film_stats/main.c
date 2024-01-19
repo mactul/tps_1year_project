@@ -28,7 +28,6 @@ static enum RETURN_CODE create_stats(const SA_DynamicArray* films, const SA_Dyna
     if (film_stats == NULL)
     {
         exit_code = RETURN_CODE_SIGNAL_ABORT;
-        SA_print_error("\nInterrupted by user\n\n");
         goto FREE;
     }
 
@@ -62,7 +61,7 @@ FREE:
 /// @return 
 /// * RETURN_CODE_OK if everything went correctly
 /// * RETURN_CODE_ERROR_MEMORY if there was a memory allocation error
-/// * RETURN_CODE_ERROR_FILE_NOT_FOUND if the binary file doesn't exist
+/// * RETURN_CODE_ERROR_FILE if the binary file doesn't exist
 /// * RETURN_CODE_ERROR_ARGUMENTS if the command line arguments are incorrect
 /// * RETURN_CODE_SIGNAL_ABORT if the user cancelled the program
 int main(int argc, char* argv[])
@@ -90,7 +89,7 @@ int main(int argc, char* argv[])
     if (file == NULL)
     {
         fprintf(stderr, "Data file has not been generated, please run film_parser\n");
-        exit_code = RETURN_CODE_ERROR_FILE_NOT_FOUND;
+        exit_code = RETURN_CODE_ERROR_FILE;
         goto EXIT_LBL;
     }
     films = read_all_films(file);
@@ -126,5 +125,22 @@ EXIT_LBL:
 
     SA_destroy();
 
+    switch(exit_code)
+    {
+        case RETURN_CODE_ERROR_MEMORY:
+            SA_print_error("Memory error\n");
+            break;
+        case RETURN_CODE_ERROR_FILE:
+            SA_print_error("File I/O error\n");
+            break;
+        case RETURN_CODE_ERROR_ARGUMENTS:
+            SA_print_error("Invalid arguments\n");
+            break;
+        case RETURN_CODE_SIGNAL_ABORT:
+            SA_print_error("Stopped by user\n");
+            break;
+        default:
+            break;
+    }
     return exit_code;
 }

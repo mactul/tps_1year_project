@@ -165,7 +165,7 @@ void draw_callback(SA_GraphicsWindow *window)
     SA_DynamicArray* films_infos = get_films_infos(movie_title_file_path);
     if (films_infos == NULL)
     {
-        _return_code = RETURN_CODE_ERROR_FILE_NOT_FOUND;
+        _return_code = RETURN_CODE_ERROR_FILE;
         return;
     }
 
@@ -173,7 +173,7 @@ void draw_callback(SA_GraphicsWindow *window)
     if (films == NULL)
     {
         SA_dynarray_free(&films_infos);
-        _return_code = RETURN_CODE_ERROR_FILE_NOT_FOUND;
+        _return_code = RETURN_CODE_ERROR_FILE;
         return;
     }
     
@@ -311,7 +311,7 @@ void draw_callback(SA_GraphicsWindow *window)
 /// @return 
 /// * RETURN_CODE_OK if everything went correctly
 /// * RETURN_CODE_ERROR_MEMORY if there was a memory allocation error
-/// * RETURN_CODE_ERROR_FILE_NOT_FOUND if the films
+/// * RETURN_CODE_ERROR_FILE if a file does not exist
 /// * RETURN_CODE_ERROR_ARGUMENTS if command line arguments are incorrect
 int main(int argc, char* argv[])
 {
@@ -328,5 +328,23 @@ int main(int argc, char* argv[])
 
 EXIT_LBL:
     SA_destroy();
+
+    switch(_return_code)
+    {
+        case RETURN_CODE_ERROR_MEMORY:
+            SA_print_error("Memory error\n");
+            break;
+        case RETURN_CODE_ERROR_FILE:
+            SA_print_error("File I/O error\n");
+            break;
+        case RETURN_CODE_ERROR_ARGUMENTS:
+            SA_print_error("Invalid arguments\n");
+            break;
+        case RETURN_CODE_SIGNAL_ABORT:
+            SA_print_error("Stopped by user\n");
+            break;
+        default:
+            break;
+    }
     return _return_code;
 }
