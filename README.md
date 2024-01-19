@@ -5,6 +5,7 @@
   - [Sommaire](#sommaire)
   - [Qu'est-ce que c'est ?](#quest-ce-que-cest-)
   - [Comment l'utiliser ?](#comment-lutiliser-)
+    - [films\_liked.txt](#films_likedtxt)
   - [Structures binaires utilisées](#structures-binaires-utilisées)
   - [Détails et choix d'implémentation](#détails-et-choix-dimplémentation)
     - [SystemAbstraction](#systemabstraction)
@@ -12,6 +13,7 @@
     - [Ligne de commande](#ligne-de-commande)
     - [Tests](#tests)
   - [Quelques données et statistiques](#quelques-données-et-statistiques)
+  - [A améliorer](#a-améliorer)
 
 ## Qu'est-ce que c'est ?
 Un projet qui fournit des recommandations de films à partir d'une base de données de notes par des utilisateurs de Netflix. Il est composé de trois programmes :
@@ -65,6 +67,13 @@ Enfin:
 ```
 ./bin/film_gui download/movie_titles.txt
 ```
+
+### films_liked.txt
+
+Lorsque l'on utilise film_stats avec l'option -r, il faut fournir un fichier texte.  
+Ce fichier est formaté avec un identifiant de film par ligne.  
+L'exemple fourni dans data/film_liked.txt contient les IDs de Nemo et Toys Story.
+Les films retournées en premier dans l'interface graphique seront donc des films proches de ces Pixars.
 
 ## Structures binaires utilisées
 
@@ -216,3 +225,9 @@ Le programme de parsing des données met environ 30 secondes sur un processeur R
 Le programme de création de statistiques met 5 secondes sur ce même PC. Il utilise environ 785 Mo de RAM.
 
 Le programme d'affichage des statistiques se lance instantanément grâce à une structure de données optimisée.
+
+## A améliorer
+
+Nous avions encore beaucoup d'idées, mais le temps a manqué pour tout implémenter.  
+L'un de mes plus gros regrets, c'est de ne pas avoir eu le temps de synchroniser la GUI avec le fichier films_liked.txt. Actuellement il faut entrer les ids des films à la main dans le fichier.  
+J'aurais aimé afficher un coeur clickable sur la GUI, pour ajouter ou retirer des films des favoris et pouvoir relancer film_stats depuis la GUI.
