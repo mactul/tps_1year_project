@@ -35,34 +35,53 @@ void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_off
     double ratings[NUMBER_OF_YEARS_LOGGED_IN_STATS];
     double ratings_count[NUMBER_OF_YEARS_LOGGED_IN_STATS];
     int ratings_total_count = 0;
+    double ratings_sum = 0;
+    double years_of_ratings_count;
 
     for (int i = 0; i < NUMBER_OF_YEARS_LOGGED_IN_STATS; i++)
     {
         years[i] = fstats->max_year - i;
         ratings[i] = fstats->mean_rating_over_years[i] < 0 ? 0 : fstats->mean_rating_over_years[i];
         ratings_count[i] = fstats->kept_rating_count_over_years[i];
-        ratings_total_count += round(fstats->kept_rating_count_over_years[i]);
+        ratings_total_count += fstats->kept_rating_count_over_years[i];
+        if(fstats->mean_rating_over_years[i] != -1)
+        {
+            ratings_sum += ratings[i];
+            years_of_ratings_count++;
+        }
     }
 
     SA_graphics_plot_continuous_graph(window, years, ratings, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_avg_ratings, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
     SA_graphics_plot_continuous_graph(window, years, ratings_count, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_ratings_count, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
 
-    const char desc1[] = "Average rating over years";
+    const char desc1[] = "Average note over years";
     const char desc2[] = "Number of ratings per year";
     SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(desc1)) / 2 + LIST_WIDTH, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 20, desc1, WINDOW_FOREGROUND); // First graph title
     SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(desc2)) / 2 + LIST_WIDTH, graphics_rectangle_ratings_count.top_left_corner_y + graphics_rectangle_ratings_count.height + 20, desc2, WINDOW_FOREGROUND); // Second graph title
     SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 2 - SA_strlen(info->name) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 20, info->name, WINDOW_FOREGROUND); // Main area title (movie name)
 
-    char recommend_text[50] = "Recommended : ";
-    snprintf(&recommend_text[SA_strlen(recommend_text)], 10, "%f", fstats->recommendation);
+    SA_graphics_vram_draw_text(window, LIST_WIDTH + MARGIN_DESC_TEXT, HEADER_HEIGHT + 50, "Average note:", WINDOW_FOREGROUND);
 
-    char rating_count_text[50] = "Number of rating over these years : ";
-    snprintf(&rating_count_text[SA_strlen(rating_count_text)], 10, "%d", ratings_total_count);
+    double avg_note = ratings_sum / years_of_ratings_count;
+    printf("%f\n", avg_note);
+    for(int i = 0; i < 5; i++)
+    {
+        if(avg_note >= 1.0)
+        {
+            draw_star(window, LIST_WIDTH + MARGIN_DESC_TEXT + SA_strlen("Average note: ") * FONT_WIDTH + 40 * i, HEADER_HEIGHT + 40, 1.0);
+            avg_note -= 1.0;
+        }
+        else
+        {
+            draw_star(window, LIST_WIDTH + MARGIN_DESC_TEXT + SA_strlen("Average note: ") * FONT_WIDTH + 40 * i, HEADER_HEIGHT + 40, avg_note);
+            avg_note = 0.0;
+        }
+    }
+   
+    char rating_count_text[50] = "Number of rating over the last 10 years : ";
+    SA_uint64_to_str(rating_count_text + SA_strlen(rating_count_text), ratings_total_count);
 
-    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 4 - SA_strlen(recommend_text) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 40, recommend_text, WINDOW_FOREGROUND); // Main area title (movie name)
-
-    int middle_of_main_area = (WINDOW_WIDTH + LIST_WIDTH) / 2;
-    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + middle_of_main_area) - SA_strlen(rating_count_text) * FONT_WIDTH) / 2, HEADER_HEIGHT + 40, rating_count_text, WINDOW_FOREGROUND); // Main area title (movie name)
+    SA_graphics_vram_draw_text(window, LIST_WIDTH + MARGIN_DESC_TEXT, HEADER_HEIGHT + 80, rating_count_text, WINDOW_FOREGROUND); // Main area title (movie name)
 
     SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH + GRAPH_PAD, WINDOW_WIDTH - GRAPH_PAD, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 30, WINDOW_FOREGROUND_ALTERNATE, 1); // Separator
 }
