@@ -43,4 +43,14 @@ read -n 1 arg
 
 exec_silent_test 0 ./bin/film_gui ./download/movie_titles.txt
 
+echo "-----------------------------------------------------"
+echo "Tests with valgrind (on a small dataset)"
+
+exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_parser ./download/training_set/mv_00000*.txt
+exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_stats
+
+echo -ne "\033[34mFor this next test, you will have to close the window once it is opened, press any key to continue\033[0m"
+read -n 1 arg
+exec_silent_test 0 valgrind -q --leak-check=full --error-exitcode=42 ./bin/film_gui ./download/movie_titles.txt
+
 popd
