@@ -177,7 +177,7 @@ SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_Dyna
         {
             add_film_stats(film_stats, _SA_dynarray_get_element_ptr(films, i), reviewers, liked_films);
         }
-        if(i % (SA_dynarray_size(films) / 100) == 0)
+        if(SA_dynarray_size(films) >= 100 && i % (SA_dynarray_size(films) / 100) == 0)
         {
             printf("%d%%\n\033[A\r", 100 * (int)i / (int)SA_dynarray_size(films));
         }
