@@ -5,21 +5,15 @@
 #define MIN(a, b) (a > b ? b : a)
 
 
-static void color_row(SA_GraphicsWindow* window, int i, int element, int pixel_offset)
+static void color_row(SA_GraphicsWindow* window, int i, uint32_t pixel_offset, uint32_t color)
 {
-    if(((element+i) & 0x1) == 0x1)
+    if (i == 0) // it's the first entry, it may be partially cropped
     {
-        return;
-    }
-
-    if (i == 0) // Hack to color the first partially visible entry's background
-    {
-        int bottom = HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT;
-        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, (bottom + HEADER_HEIGHT + SEARCH_BAR_HEIGHT) / 2, WINDOW_BACKGROUND_ALTERNATE, bottom - HEADER_HEIGHT - SEARCH_BAR_HEIGHT);
+        SA_graphics_vram_draw_rectangle(window, 0, HEADER_HEIGHT + SEARCH_BAR_HEIGHT,  LIST_WIDTH - ELEVATOR_WIDTH, LIST_ENTRY_HEIGHT - pixel_offset % LIST_ENTRY_HEIGHT, color);
     }
     else
     {
-        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_ALTERNATE, LIST_ENTRY_HEIGHT);
+        SA_graphics_vram_draw_rectangle(window, 0, 1 + HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - pixel_offset % LIST_ENTRY_HEIGHT, LIST_WIDTH - ELEVATOR_WIDTH, LIST_ENTRY_HEIGHT, color);
     }
 }
 
@@ -78,27 +72,18 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
 
     for (int i = 0; i < max_i_value; i++)
     {
-        color_row(window, i, element, *pixel_offset);
+        if(((element+i) & 0x1) == 0)
+        {
+            color_row(window, i, *pixel_offset, WINDOW_BACKGROUND_ALTERNATE);
+        }
 
         uint32_t fg_color_alt = WINDOW_FOREGROUND_ALTERNATE;
         uint32_t fg_color = WINDOW_FOREGROUND;
 
         if (element + i == *selected_index)
         {
-            if (i == 0)
-            {
-                int bottom = HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT;
-                SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, (bottom + HEADER_HEIGHT + SEARCH_BAR_HEIGHT) / 2, WINDOW_BACKGROUND_SELECTED, bottom - HEADER_HEIGHT - SEARCH_BAR_HEIGHT);
-            }
-            else
-            {
-                SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_SELECTED, LIST_ENTRY_HEIGHT);
-            }
+            color_row(window, i, *pixel_offset, WINDOW_BACKGROUND_SELECTED);
             fg_color = fg_color_alt = WINDOW_FOREGROUND_SELECTED;
-        }
-        else if (element + i + 1 == *selected_index)
-        {
-            SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + LIST_ENTRY_HEIGHT / 2, WINDOW_BACKGROUND_SELECTED, LIST_ENTRY_HEIGHT);
         }
 
         SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, WINDOW_FOREGROUND, 1); // List separator
