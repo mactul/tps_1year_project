@@ -45,7 +45,7 @@ Une documentation doxygen est fournie, pour la générer, vous pouvez appeler `x
 
 Pour obtenir une liste de recommandations avec le jeu de données fourni, vous pouvez appeler:
 
-D'abbord:
+D'abord:
 ```
 ./bin/film_parser ./download/training_set/mv_*.txt
 ```
@@ -175,7 +175,7 @@ Nous avons créé une branche `beta` sur ce repository, cette branche contiendra
 
 La GUI du projet est basée sur la surcouche graphique fournie par SA.  
 SA a été créée pour pouvoir être branchée sur n'importe quelle bibliothèque graphique, mais pour l'instant, elle utilise X11, qui est la façon native de communiquer avec le gestionnaire de fenêtres sous Linux, cependant ce protocol est vieux et dépassé, ce qui nous a amené de nombreux problèmes.  
-Un de ceux que nous n'avons pas put résoudre pour le moment est que l'une des fonctions de X11 (XLookupString) est mal conçue et ne libère pas la mémoire qu'elle alloue lors de la fermeture du programme.  
+Un de ceux que nous n'avons pas pu résoudre pour le moment est que l'une des fonctions de X11 (XLookupString) est mal conçue et ne libère pas la mémoire qu'elle alloue lors de la fermeture du programme.  
 Valgrind indique donc que des blocs sont non-libérés mais cela ne vient pas directement de notre code...
 
 
