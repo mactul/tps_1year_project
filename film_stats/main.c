@@ -17,7 +17,6 @@
 /// @param films Array containing all the movies
 /// @param reviewers Array of structures containing the number of ratings and average rating for each user
 /// @param filter_options Pointer to a structure containing all the filters to use
-/// @param movie_title_filepath File path of the movie_titles.txt file
 /// @return
 /// * RETURN_CODE_OK if everything went correctly
 /// * RETURN_CODE_SIGNAL_ABORT if the program was interrupted

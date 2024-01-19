@@ -4,7 +4,11 @@
 
 #define MIN(a, b) (a > b ? b : a)
 
-
+/// @brief Color a list item's background inside a window
+/// @param window The window to draw in
+/// @param i Index of the list item
+/// @param pixel_offset First pixel of the list that is visible on the screen
+/// @param color Background color of the list item
 static void color_row(SA_GraphicsWindow* window, int i, uint32_t pixel_offset, uint32_t color)
 {
     if (i == 0) // it's the first entry, it may be partially cropped
@@ -32,6 +36,9 @@ void redraw_elevator(SA_GraphicsWindow* window, ElevatorProperties* elevator_pro
 /// @param elevator_properties Pointer to properties of the scrollbar
 /// @param films_infos Array of structures containing the title and release year for every movie
 /// @param films_stats Array of structures containing stats about every movie
+/// @param selected_index Index of the selected movie from the list
+/// @param display_query If the list should show all items or only a search
+/// @param film_stats_filtered Filtered list of film stats
 void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
 {
     SA_DynamicArray* film_stats_to_use = (*display_query == SA_TRUE) ? film_stats_filtered : films_stats;
@@ -121,6 +128,9 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
 /// @param elevator_properties Pointer to properties of the scrollbar
 /// @param films_infos Array of structures containing the title and release year for every movie
 /// @param films_stats Array of structures containing stats about every movie
+/// @param selected_index Index of the selected movie from the list
+/// @param display_query If the list should show all items or only a search
+/// @param film_stats_filtered Filtered list of film stats
 void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int direction, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
 {
     SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;

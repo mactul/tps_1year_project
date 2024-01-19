@@ -16,6 +16,7 @@
 /// @param window The window in which to draw
 /// @param avg_note Average rating
 /// @param ratings_total_count Number of ratings
+/// @param film_id Id of the film for which to draw the summary
 static void draw_summary(SA_GraphicsWindow* window, double avg_note, uint32_t ratings_total_count, uint32_t film_id)
 {
     char rating_count_text[50] = RATING_COUNT_LABEL;

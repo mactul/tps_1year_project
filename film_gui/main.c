@@ -48,6 +48,19 @@ void search_bar_highlight_redraw(SA_GraphicsWindow* window, SA_bool do_highlight
     SA_graphics_vram_draw_hollow_rectangle(window, 0, HEADER_HEIGHT, LIST_WIDTH - 1, SEARCH_BAR_HEIGHT - 1, outline_color, 1);
 }
 
+/// @brief Handle a click inside a graphical window
+/// @param window The window in which to draw
+/// @param event Details of this event
+/// @param query_has_results If the current search term has matches
+/// @param search_bar_highlight If the search bar is currently focused
+/// @param elevator_properties Position and brightness of the scrollbar
+/// @param elevator_mouse_down If the cursor is clicked on the scrollbar
+/// @param pixel_offset Height of the first visible pixel of the movie list
+/// @param films_infos Array of FilmInfo structures
+/// @param films_stats Array of FilmStats structures
+/// @param selected_index Index of the currently selected movie in the visible list
+/// @param display_query If the list area should display the filtered list
+/// @param film_stats_filtered Array of FilmStats structures filtered to match the search query
 void event_handler_mouse_down(SA_GraphicsWindow* window, SA_GraphicsEvent* event, SA_bool query_has_results, SA_bool* search_bar_highlight, ElevatorProperties* elevator_properties, SA_bool* elevator_mouse_down, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
 {
     if (!query_has_results)
@@ -76,6 +89,20 @@ void event_handler_mouse_down(SA_GraphicsWindow* window, SA_GraphicsEvent* event
     SA_graphics_vram_flush(window);
 }
 
+/// @brief Handle a click inside a graphical window
+/// @param window The window in which to draw
+/// @param event Details of this event
+/// @param display_query If the list area should display the filtered list
+/// @param search_bar_highlight If the search bar is currently focused
+/// @param selected_index Index of the currently selected movie in the visible list
+/// @param pixel_offset Height of the first visible pixel of the movie list
+/// @param text_input_string String that is currently displayed inside the text field
+/// @param text_input Text input field
+/// @param query_has_results If the current search term has matches
+/// @param elevator_properties Position and brightness of the scrollbar
+/// @param films_infos Array of FilmInfo structures
+/// @param films_stats Array of FilmStats structures
+/// @param film_stats_filtered Array of FilmStats structures filtered to match the search query
 void event_handler_key_down(SA_GraphicsWindow* window, SA_GraphicsEvent* event, SA_bool* display_query, SA_bool* search_bar_highlight, int* selected_index, int* pixel_offset, const char* text_input_string, SA_GraphicsTextInput* text_input, SA_bool* query_has_results, ElevatorProperties* elevator_properties, SA_DynamicArray* films_stats, SA_DynamicArray* films_infos, SA_DynamicArray** film_stats_filtered)
 {
     SA_DynamicArray* film_stats_to_count = *display_query ? *film_stats_filtered : films_stats;
@@ -109,8 +136,10 @@ void event_handler_key_down(SA_GraphicsWindow* window, SA_GraphicsEvent* event, 
     }
     else
     {
-        SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH / 2, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, WINDOW_HEIGHT, WINDOW_BACKGROUND, LIST_WIDTH);
-        SA_graphics_vram_draw_vertical_line(window, (WINDOW_WIDTH + LIST_WIDTH) / 2, HEADER_HEIGHT, WINDOW_HEIGHT, WINDOW_BACKGROUND, WINDOW_WIDTH - LIST_WIDTH);
+        // Clear search area
+        SA_graphics_vram_draw_rectangle(window, 0, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, LIST_WIDTH, WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT, WINDOW_BACKGROUND);
+        // Clear main area
+        SA_graphics_vram_draw_rectangle(window, LIST_WIDTH, HEADER_HEIGHT, WINDOW_WIDTH - LIST_WIDTH, WINDOW_HEIGHT - HEADER_HEIGHT, WINDOW_BACKGROUND);
         SA_graphics_vram_flush(window);
         *display_query = SA_FALSE;
     }
@@ -121,7 +150,7 @@ void event_handler_key_down(SA_GraphicsWindow* window, SA_GraphicsEvent* event, 
 void draw_callback(SA_GraphicsWindow *window)
 {
     // Waiting screen, this should not even display as reading stats.bin is almost instantaneous
-    SA_graphics_vram_draw_horizontal_line(window, 0, WINDOW_WIDTH, WINDOW_HEIGHT / 2, WINDOW_BACKGROUND, WINDOW_HEIGHT);
+    SA_graphics_vram_draw_rectangle(window, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND);
     const char wait_text1[] = "Merci de patienter";
     const char wait_text2[] = "Les données sont en train de charger";
     SA_graphics_vram_draw_text(window, WINDOW_HEIGHT / 2, (WINDOW_WIDTH - SA_strlen(wait_text1)) / 2, wait_text1, WINDOW_FOREGROUND);
@@ -157,13 +186,16 @@ void draw_callback(SA_GraphicsWindow *window)
         return;
     }
 
-    SA_graphics_vram_draw_horizontal_line(window, 0, WINDOW_WIDTH, WINDOW_HEIGHT / 2, WINDOW_BACKGROUND, WINDOW_HEIGHT); // Clear screen again
+    // Clear screen again
+    SA_graphics_vram_draw_rectangle(window, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND);
 
     // Initial view, main area is blank
     SA_graphics_vram_draw_text(window, 10, 25, "Movie stats - recommended for you", WINDOW_FOREGROUND);
     int pixel_offset = 0;
     ElevatorProperties elevator_properties = {.color = ELEVATOR_COLOR_DEFAULT, .position_y = 0};
     SA_EventMouse cursor_properties = {.x = 0, .y = 0};
+
+    // Separators
     SA_graphics_vram_draw_horizontal_line(window, 0, WINDOW_WIDTH, HEADER_HEIGHT, WINDOW_FOREGROUND, 2);
     SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH, HEADER_HEIGHT, WINDOW_HEIGHT, WINDOW_FOREGROUND, 2);
     draw_movie_list_from_percentage_offset(window,  0.0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
