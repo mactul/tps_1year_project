@@ -7,5 +7,6 @@ doc/*
 !doc/.gitkeep
 .xmake
 build
+bin
 out
 *.bin

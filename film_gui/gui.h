@@ -1,6 +1,7 @@
 #ifndef GUI_H
 #define GUI_H
 
+#include <SA/SA.h>
 #include <stdint.h>
 
 #define WINDOW_WIDTH 1600
@@ -44,6 +45,7 @@ typedef struct _elevator_properties {
     int position_y;
 } ElevatorProperties;
 
-int start_gui(int argc, char* argv[]);
+
+void draw_star(SA_GraphicsWindow* window, double x, double y, float percent_filling);
 
 #endif
