@@ -204,6 +204,7 @@ void draw_callback(SA_GraphicsWindow *window)
                     }
                     break;
                 case SA_GRAPHICS_EVENT_KEY_DOWN:
+                {
                     SA_DynamicArray* film_stats_to_count = display_query ? film_stats_filtered : films_stats;
                     if (!search_bar_highlight)
                     {
@@ -214,7 +215,7 @@ void draw_callback(SA_GraphicsWindow *window)
                             draw_movie_info(window, selected_index * LIST_ENTRY_HEIGHT - pixel_offset + HEADER_HEIGHT + SEARCH_BAR_HEIGHT, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                             SA_graphics_vram_flush(window);
                         }
-                        else if (event.events.key.keycode == 0x74 && selected_index < SA_dynarray_size(film_stats_to_count) - 1) // Down arrow
+                        else if (event.events.key.keycode == 0x74 && (uint64_t) selected_index < SA_dynarray_size(film_stats_to_count) - 1) // Down arrow
                         {
                             selected_index += 1;
                             draw_movie_list_from_relative_pixel_offset(window, LIST_ENTRY_HEIGHT, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
@@ -241,6 +242,7 @@ void draw_callback(SA_GraphicsWindow *window)
                         display_query = SA_FALSE;
                     }
                     break;
+                }
                 case SA_GRAPHICS_EVENT_CLOSE_WINDOW:
                     SA_dynarray_free(&films_stats);
                     SA_dynarray_free(&films_infos);

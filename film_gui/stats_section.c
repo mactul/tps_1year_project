@@ -1,28 +1,35 @@
 #include "film_gui/gui.h"
 #include "src/data_structs.h"
 
-#define AVG_NOTE_LABEL "Average note: "
+#define AVG_NOTE_LABEL "Average note : "
 #define RATING_COUNT_LABEL "Number of rating over the last 10 years : "
+#define FILM_ID_LABEL "Film ID : "
 
 #define GRAPH1_LABEL "Average note over years"
 #define GRAPH2_LABEL "Number of ratings per year"
 
 #define AVG_NOTE_Y_OFFSET 50
 #define RATING_COUNT_Y_OFFSET 80
+#define FILM_ID_Y_OFFSET 110
 
 /// @brief Draw the number of ratings and average rating of the movie with stars in a window
 /// @param window The window in which to draw
 /// @param avg_note Average rating
 /// @param ratings_total_count Number of ratings
-static void draw_summary(SA_GraphicsWindow* window, double avg_note, uint32_t ratings_total_count)
+static void draw_summary(SA_GraphicsWindow* window, double avg_note, uint32_t ratings_total_count, uint32_t film_id)
 {
     char rating_count_text[50] = RATING_COUNT_LABEL;
+    char film_id_text[50] = FILM_ID_LABEL;
     SA_uint64_to_str(rating_count_text + SA_strlen(rating_count_text), ratings_total_count);
+    SA_uint64_to_str(film_id_text + SA_strlen(film_id_text), film_id);
     // drawing the rating count
     SA_graphics_vram_draw_text(window, LIST_WIDTH + MARGIN_DESC_TEXT, HEADER_HEIGHT + RATING_COUNT_Y_OFFSET, rating_count_text, WINDOW_FOREGROUND);
 
     // drawing the AVG_NOTE_LABEL
     SA_graphics_vram_draw_text(window, LIST_WIDTH + MARGIN_DESC_TEXT, HEADER_HEIGHT + AVG_NOTE_Y_OFFSET, AVG_NOTE_LABEL, WINDOW_FOREGROUND);
+
+    // drawing the film_id
+    SA_graphics_vram_draw_text(window, LIST_WIDTH + MARGIN_DESC_TEXT, HEADER_HEIGHT + FILM_ID_Y_OFFSET, film_id_text, WINDOW_FOREGROUND);
 
     // drawing the 5 stars
     for(int i = 0; i < 5; i++)
@@ -94,7 +101,7 @@ void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_off
     // Main area title (movie name)
     SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 2 - SA_strlen(info->name) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 20, info->name, WINDOW_FOREGROUND);
 
-    draw_summary(window, ratings_sum / years_of_ratings_count, ratings_total_count);
+    draw_summary(window, ratings_sum / years_of_ratings_count, ratings_total_count, fstats->film_id);
 
     // First graph
     SA_graphics_plot_continuous_graph(window, years, ratings, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_avg_ratings, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
