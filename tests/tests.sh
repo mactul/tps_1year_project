@@ -16,7 +16,8 @@ exec_silent_test() {
     echo "-----------------------------------------------------"
 }
 
-pushd ..
+BASEDIR=$(dirname "$0")
+pushd $BASEDIR/..
 echo "rm -vf ./data/*.bin"
 rm -vf ./data/*.bin
 
