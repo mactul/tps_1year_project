@@ -8,8 +8,8 @@
   - [Structures binaires utilisées](#structures-binaires-utilisées)
   - [Détails et choix d'implémentation](#détails-et-choix-dimplémentation)
     - [SystemAbstraction](#systemabstraction)
-    - [structures des fichiers](#structures-des-fichiers)
-    - [ligne de commande](#ligne-de-commande)
+    - [Structures des fichiers](#structures-des-fichiers)
+    - [Ligne de commande](#ligne-de-commande)
     - [Tests](#tests)
   - [Quelques données et statistiques](#quelques-données-et-statistiques)
 
@@ -180,7 +180,7 @@ Un de ceux que nous n'avons pas pu résoudre pour le moment est que l'une des fo
 Valgrind indique donc que des blocs sont non-libérés mais cela ne vient pas directement de notre code...
 
 
-### structures des fichiers
+### Structures des fichiers
 
 La structure du fichier data.bin a été choisie car elle est quasiment identique aux données stockées en RAM mais à la place de pointeurs, on note la position du curseur dans le fichier.
 
@@ -188,7 +188,7 @@ La structure Rating est faite pour tenir sur 8 octets. Pour garder en mémoire l
 
 De même la structure du fichier stats.bin est une représentation directe de la RAM, elle peut donc être lue et écrite TRÈS rapidement.
 
-### ligne de commande
+### Ligne de commande
 
 Chaque programme possède une aide, affichable a l'aide de `./bin/[program] -h`.
 
