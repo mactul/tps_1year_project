@@ -46,7 +46,6 @@ void search_bar_highlight_redraw(SA_GraphicsWindow* window, SA_bool do_highlight
 {
     uint32_t outline_color = do_highlight == SA_TRUE ? WINDOW_BACKGROUND_SELECTED : SEARCH_BG_COLOR;
     SA_graphics_vram_draw_hollow_rectangle(window, 0, HEADER_HEIGHT, LIST_WIDTH - 1, SEARCH_BAR_HEIGHT - 1, outline_color, 1);
-    SA_graphics_vram_draw_hollow_rectangle(window, 500, 500, 200, 200, 0xFF0000, 1);
 }
 
 /// @brief This function receives all the events linked to a window
