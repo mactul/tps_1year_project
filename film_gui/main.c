@@ -24,12 +24,17 @@ static int _return_code;
 /// @param film_stats_filtered Filtered array of structures containing stats about matched movies
 void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
 {
-    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH + 1, WINDOW_WIDTH, (WINDOW_HEIGHT - HEADER_HEIGHT) / 2 + HEADER_HEIGHT + 1, WINDOW_BACKGROUND, WINDOW_HEIGHT - HEADER_HEIGHT); // Clear main area
-
     int movie_pixel_offset = mouse_y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT + *pixel_offset;
     *selected_index = movie_pixel_offset / LIST_ENTRY_HEIGHT;
 
     SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;
+
+    if ((uint64_t) *selected_index >= SA_dynarray_size(film_stats_to_use))
+    {
+        return; // Can't click on an empty element in the list
+    }
+
+    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH + 1, WINDOW_WIDTH, (WINDOW_HEIGHT - HEADER_HEIGHT) / 2 + HEADER_HEIGHT + 1, WINDOW_BACKGROUND, WINDOW_HEIGHT - HEADER_HEIGHT); // Clear main area
 
     // Get film stats and infos
     FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats_to_use, *selected_index);
@@ -118,10 +123,16 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
         percentage = 1;
     }
 
+
     SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;
 
     int movie_count = SA_dynarray_size(film_stats_to_use);
     int list_height = (movie_count * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
+
+    if (*selected_index >= movie_count)
+    {
+        return; // Can't click on an empty element
+    }
 
     *pixel_offset = round(list_height * percentage); // Where we are in the list
 
@@ -135,7 +146,7 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
     SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH - (ELEVATOR_WIDTH / 2) - 1, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 1, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR, ELEVATOR_WIDTH); // Clear elevator track
     SA_graphics_vram_draw_vertical_line(window, (LIST_WIDTH - ELEVATOR_WIDTH) / 2, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 1, WINDOW_HEIGHT, WINDOW_BACKGROUND, (LIST_WIDTH - ELEVATOR_WIDTH)); // Clear list
 
-    char text_limited[WINDOW_WIDTH / FONT_WIDTH - 20] = {0};
+    char text_limited[(LIST_WIDTH - ELEVATOR_WIDTH) / FONT_WIDTH - 10] = {0};
     char year[5] = {0};
 
     int max_i_value = MIN(movie_count, (WINDOW_HEIGHT - HEADER_HEIGHT - HEADER_HEIGHT) / LIST_ENTRY_HEIGHT + 1); // If there are less elements than what can be displayed, limit the for loop
@@ -208,7 +219,7 @@ void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int d
 
     if (list_height <= 0)
     {
-        return;
+        *pixel_offset = 0;
     }
 
     // Compute percentage based on the position in the list
@@ -239,13 +250,12 @@ void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int d
 /// @return SA_FALSE if no film titles matches, SA_TRUE if there is at least one match
 SA_bool movie_search(SA_DynamicArray* film_infos, SA_DynamicArray* film_stats, const char* substring, SA_DynamicArray** film_stats_filtered)
 {
-    int string_length = SA_strlen(substring);
     SA_dynarray_free(film_stats_filtered);
     *film_stats_filtered = SA_dynarray_create(FilmStats);
     char* film_name;
     FilmStats current_film_stat;
     FilmInfo* current_film_info;
-    for (int i = 0; i < SA_dynarray_size(film_stats); i++)
+    for (uint64_t i = 0; i < SA_dynarray_size(film_stats); i++)
     {
         current_film_stat = SA_dynarray_get(FilmStats, film_stats, i);
         current_film_info = _SA_dynarray_get_element_ptr(film_infos, current_film_stat.film_id);
@@ -347,7 +357,8 @@ void draw_callback(SA_GraphicsWindow *window)
                     break;
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_UP:
                     elevator_properties.color = ELEVATOR_COLOR_DEFAULT;
-                    draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
+                    redraw_elevator(window, &elevator_properties);
+                    // draw_movie_list_from_relative_pixel_offset(window, 0, &pixel_offset, &elevator_properties, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
                     SA_graphics_vram_flush(window);
                     elevator_mouse_down = SA_FALSE;
                     break;
@@ -399,7 +410,6 @@ void draw_callback(SA_GraphicsWindow *window)
                 case SA_GRAPHICS_EVENT_KEY_DOWN:
                     display_query = SA_TRUE;
                     text_input_string = SA_graphics_get_text_input_value(text_input);
-                    printf("0x%x\n", event.events.key.keycode);
                     if (SA_strlen(text_input_string) == 0)
                     {
                         SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", WINDOW_FOREGROUND_SELECTED);
