@@ -8,39 +8,38 @@
 #include "src/dataset_io/writer_bin.h"
 #include "src/stats_io/writer_stats.h"
 #include "src/recommendation/recommendation.h"
+#include "src/signal_handler.h"
 
 #define MAX_FILENAME_SIZE 256
-
-/// @brief Signal handler for Ctrl+C
-/// @param signum Signal number
-void sigint_close_files(int signum __attribute__((unused)))
-{
-    printf("Attendez une minute, c'est bientôt fini\n");
-    return;
-}
 
 /// @brief Create and write stats for all the movies
 /// @param films Array containing all the movies
 /// @param reviewers Array of structures containing the number of ratings and average rating for each user
 /// @param filter_options Pointer to a structure containing all the filters to use
 /// @param movie_title_filepath File path of the movie_titles.txt file
-static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const StatsArguments* filter_options, const char* movie_title_filepath)
+/// @return
+/// * 0 if everything went correctly
+/// * 2 if the movie_titles.txt file does not exist
+/// * 4 if the program was interrupted
+static int create_stats(const SA_DynamicArray* films, const SA_DynamicArray* reviewers, const StatsArguments* filter_options, const char* movie_title_filepath)
 {
+    int exit_code = 0;
     SA_DynamicArray* film_stats = calculate_all_stats(films, reviewers, filter_options);
+
+    if (film_stats == NULL)
+    {
+        exit_code = 4;
+        SA_print_error("\nInterrupted by user\n\n");
+        goto FREE;
+    }
 
     SA_DynamicArray* films_infos = get_films_infos(movie_title_filepath);
 
     if(films_infos == NULL)
     {
+        exit_code = 2;
         SA_print_error("Impossible to get the film titles, please make sure the file path is good\n\n");
         goto FREE;
-    }
-
-    for(int i = 0; i < 40; i++)
-    {
-        FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats, i);
-        FilmInfo info = SA_dynarray_get(FilmInfo, films_infos, fstats->film_id);
-        printf("%d : %s\n", fstats->film_id, info.name);
     }
     
     long last_slash = -1;
@@ -67,6 +66,7 @@ static void create_stats(const SA_DynamicArray* films, const SA_DynamicArray* re
 FREE:
     SA_dynarray_free(&films_infos);
     SA_dynarray_free(&film_stats);
+    return exit_code;
 }
 
 /// @brief The program generates statistics from a binary file and displays the best matches
@@ -78,7 +78,7 @@ FREE:
 /// * 4 if the user cancelled the program (not yet implemented)
 int main(int argc, char* argv[])
 {
-    //signal(SIGINT, sigint_close_files);
+    signal(SIGINT, sigint_handler);
 
     int exit_code = 0;
 
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     fclose(file);
     file = NULL;
 
-    create_stats(films, reviewers, &args_structure, movie_titles_file);
+    exit_code = create_stats(films, reviewers, &args_structure, movie_titles_file);
 
     printf("distance between Harry Potter II  & Harry Potter II : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 11443), reviewers));
     printf("distance between Harry Potter II  & Harry Potter I  : %f\n", distance_between_films(_SA_dynarray_get_element_ptr(films, 11443), _SA_dynarray_get_element_ptr(films, 17627), reviewers));

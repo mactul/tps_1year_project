@@ -7,6 +7,10 @@
 #include "src/recommendation/recommendation.h"
 #include "src/recommendation/parse_liked_films.h"
 
+#include <signal.h>
+
+volatile sig_atomic_t _interruption_requested;
+
 /// @brief Compare recommendations between two movies (used by qsort)
 /// @param e1 A movie stats structure pointer
 /// @param e2 Another movie stat structure pointer
@@ -161,7 +165,7 @@ SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_Dyna
     {
         liked_films = parse_liked_films(filter_options->liked_films_filepath, films);
     }
-    for(uint64_t i = 0; i < SA_dynarray_size(films); i++)
+    for(uint64_t i = 0; i < SA_dynarray_size(films) && !_interruption_requested; i++)
     {
         Film film_filtered;
         if(apply_all_filters(&film_filtered, _SA_dynarray_get_element_ptr(films, i), reviewers, filter_options))
@@ -178,7 +182,14 @@ SA_DynamicArray* calculate_all_stats(const SA_DynamicArray* films, const SA_Dyna
             printf("%d%%\n\033[A\r", 100 * (int)i / (int)SA_dynarray_size(films));
         }
     }
+
     SA_dynarray_free(&liked_films);
+
+    if (_interruption_requested)
+    {
+        SA_dynarray_free(&film_stats);
+        return NULL;
+    }
 
     SA_dynarray_qsort(film_stats, cmp_recommendations);
 
