@@ -10,6 +10,10 @@
 #define AVG_NOTE_Y_OFFSET 50
 #define RATING_COUNT_Y_OFFSET 80
 
+/// @brief Draw the number of ratings and average rating of the movie with stars in a window
+/// @param window The window in which to draw
+/// @param avg_note Average rating
+/// @param ratings_total_count Number of ratings
 static void draw_summary(SA_GraphicsWindow* window, double avg_note, uint32_t ratings_total_count)
 {
     char rating_count_text[50] = RATING_COUNT_LABEL;
