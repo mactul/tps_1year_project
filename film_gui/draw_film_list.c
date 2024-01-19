@@ -22,7 +22,7 @@ static void color_row(SA_GraphicsWindow* window, int i, uint32_t pixel_offset, u
 /// @param elevator_properties Pointer to properties of the scrollbar
 void redraw_elevator(SA_GraphicsWindow* window, ElevatorProperties* elevator_properties)
 {
-    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH - ELEVATOR_WIDTH, LIST_WIDTH, elevator_properties->position_y + ELEVATOR_HEIGHT / 2, elevator_properties->color, ELEVATOR_HEIGHT);
+    SA_graphics_vram_draw_rectangle(window, LIST_WIDTH - ELEVATOR_WIDTH, elevator_properties->position_y, ELEVATOR_WIDTH, ELEVATOR_HEIGHT, elevator_properties->color);
 }
 
 /// @brief Draw the movie list from a percentage of scrolling
@@ -62,9 +62,11 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
 
     int element = *pixel_offset / LIST_ENTRY_HEIGHT; // Which element is the first partially visible
 
-    SA_graphics_vram_draw_vertical_line(window, LIST_WIDTH - (ELEVATOR_WIDTH / 2) - 1, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 1, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR, ELEVATOR_WIDTH); // Clear elevator track
-    SA_graphics_vram_draw_vertical_line(window, (LIST_WIDTH - ELEVATOR_WIDTH) / 2, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 1, WINDOW_HEIGHT, WINDOW_BACKGROUND, (LIST_WIDTH - ELEVATOR_WIDTH)); // Clear list
-
+    // Clear elevator track
+    SA_graphics_vram_draw_rectangle(window, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, ELEVATOR_WIDTH, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR);
+    // Clear list
+    SA_graphics_vram_draw_rectangle(window, 0, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, LIST_WIDTH - ELEVATOR_WIDTH, WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT, WINDOW_BACKGROUND);
+    
     char text_limited[(LIST_WIDTH - ELEVATOR_WIDTH - TITLE_PADDING_X) / FONT_WIDTH] = {0};
     char year[5] = {0};
 
@@ -86,7 +88,8 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
             fg_color = fg_color_alt = WINDOW_FOREGROUND_SELECTED;
         }
 
-        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, WINDOW_FOREGROUND, 1); // List separator
+        // List separator
+        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, WINDOW_FOREGROUND, 1);
 
         if (i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 25 <= 0) // Don't display text if it will be hidden by the header
         {
