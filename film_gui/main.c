@@ -315,11 +315,9 @@ void draw_callback(SA_GraphicsWindow *window)
     
     draw_movie_info(window, HEADER_HEIGHT + 1, &pixel_offset, films_infos, films_stats, &selected_index, &display_query, film_stats_filtered);
 
-    SA_GraphicsTextInput* text_input = SA_graphics_create_text_input(window, 0, HEADER_HEIGHT, 0xFF0000, WINDOW_FOREGROUND, 80, 10, 14);
+    SA_GraphicsTextInput* text_input = SA_graphics_create_text_input(window, 0, HEADER_HEIGHT, SEARCH_BG_COLOR, WINDOW_FOREGROUND_SELECTED, 80, 10, 14);
     // 12 is font height in below call
-    SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", WINDOW_FOREGROUND_SELECTED);
-
-    //draw_star(window, 800, 130);
+    SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", SEARCH_BAR_PLACEHOLDER_COLOR);
 
     SA_graphics_vram_flush(window);
 
@@ -328,12 +326,24 @@ void draw_callback(SA_GraphicsWindow *window)
 
     SA_bool elevator_mouse_down = SA_FALSE;
 
-    const char* text_input_string;
-
     do {
         if ((event_read = SA_graphics_wait_next_event(window, &event)))
         {
-            SA_graphics_handle_text_input_events(text_input, &event);
+            const char* text_input_string;
+            SA_bool text_focus = SA_graphics_handle_text_input_events(text_input, &event);
+            if(!text_focus)
+            {
+                if(SA_graphics_get_text_input_value(text_input)[0] == '\0')
+                {
+                    SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", SEARCH_BAR_PLACEHOLDER_COLOR);
+                    SA_graphics_vram_flush(window);
+                }
+            }
+            else
+            {
+                SA_graphics_redraw_text_input(text_input);
+            }
+
             switch(event.event_type)
             {
                 case SA_GRAPHICS_EVENT_MOUSE_LEFT_CLICK_DOWN:
@@ -412,7 +422,7 @@ void draw_callback(SA_GraphicsWindow *window)
                     text_input_string = SA_graphics_get_text_input_value(text_input);
                     if (SA_strlen(text_input_string) == 0)
                     {
-                        SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", WINDOW_FOREGROUND_SELECTED);
+                        //SA_graphics_vram_draw_text(window, 10, HEADER_HEIGHT + 14 + 12, "Search", WINDOW_FOREGROUND_SELECTED);
                         display_query = SA_FALSE;
                     }
                     SA_graphics_vram_flush(window);
