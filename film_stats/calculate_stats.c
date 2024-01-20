@@ -85,7 +85,10 @@ static void add_film_stats(SA_DynamicArray* film_stats, const Film* film_filtere
         }
     }
 
-    stats.recommendation = calculate_recommendation(film_filtered, liked_films, (double)note_sum / (double)nb_note, reviewers);
+    if (nb_note != 0)
+    {
+        stats.recommendation = calculate_recommendation(film_filtered, liked_films, (double)note_sum / (double)nb_note, reviewers);        
+    }
 
     SA_dynarray_append(FilmStats, film_stats, stats);
 }
