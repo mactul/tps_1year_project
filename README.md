@@ -3,6 +3,7 @@
 ## Sommaire
 - [Netflix Prize - Macéo Tuloup, Valentin Foulon](#netflix-prize---macéo-tuloup-valentin-foulon)
   - [Sommaire](#sommaire)
+  - [Important](#important)
   - [Qu'est-ce que c'est ?](#quest-ce-que-cest-)
   - [Comment l'utiliser ?](#comment-lutiliser-)
     - [films\_liked.txt](#films_likedtxt)
@@ -14,6 +15,9 @@
     - [Tests](#tests)
   - [Quelques données et statistiques](#quelques-données-et-statistiques)
   - [A améliorer](#a-améliorer)
+
+## Important
+Comme pour tout projet, nous avons eu une date limite de rendu donc il a fallu s'arrêter quelque part mais nous allons continuer de fournir des améliorations et des corrections de bugs. La suite se trouvera sur la branche beyond.
 
 ## Qu'est-ce que c'est ?
 Un projet qui fournit des recommandations de films à partir d'une base de données de notes par des utilisateurs de Netflix. Il est composé de trois programmes :
