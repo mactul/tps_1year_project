@@ -49,32 +49,36 @@ static void draw_summary(SA_GraphicsWindow* window, double avg_note, uint32_t ra
 }
 
 /// @brief Draw movie statistics in the info window
-/// @param window The window in which to draw
+/// @param function_arguments Structure of various arguments
 /// @param mouse_y Vertical position of the cursor to find the movie index
-/// @param pixel_offset Offset of the list that is shown inside the window
-/// @param films_infos Array of structures containing the title and release year for every movie
-/// @param films_stats Array of structures containing stats about every movie
-/// @param selected_index Index of the currently selected film in the list
-/// @param display_query If the movie info should be fetched from the filtered array of film_stats
-/// @param film_stats_filtered Filtered array of structures containing stats about matched movies
-void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
+void draw_movie_info(FunctionArguments* function_arguments, uint32_t mouse_y)
 {
-    int movie_pixel_offset = mouse_y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT + *pixel_offset;
-    *selected_index = movie_pixel_offset / LIST_ENTRY_HEIGHT;
+    int movie_pixel_offset = mouse_y - HEADER_HEIGHT - SEARCH_BAR_HEIGHT + *(function_arguments->pixel_offset);
+    *(function_arguments->selected_index) = movie_pixel_offset / LIST_ENTRY_HEIGHT;
 
-    SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;
+    SA_DynamicArray* film_stats_to_use = *(function_arguments->display_query) == SA_TRUE ? *(function_arguments->film_stats_filtered) : function_arguments->films_stats;
 
-    if ((uint64_t) *selected_index >= SA_dynarray_size(film_stats_to_use))
+    if ((uint64_t) *(function_arguments->selected_index) >= SA_dynarray_size(film_stats_to_use))
     {
         return; // Can't click on an empty element in the list
     }
 
     // Get film stats and infos
-    FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats_to_use, *selected_index);
-    FilmInfo* info = _SA_dynarray_get_element_ptr(films_infos, fstats->film_id);
+    FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats_to_use, *(function_arguments->selected_index));
+    FilmInfo* info = _SA_dynarray_get_element_ptr(function_arguments->films_infos, fstats->film_id);
 
-    SA_GraphicsRectangle graphics_rectangle_avg_ratings = {.height = GRAPH_HEIGHT, .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD, .top_left_corner_x = LIST_WIDTH + GRAPH_PAD, .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - 2 * GRAPH_HEIGHT - 2 * GRAPH_PAD};
-    SA_GraphicsRectangle graphics_rectangle_ratings_count = {.height = GRAPH_HEIGHT, .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD, .top_left_corner_x = LIST_WIDTH + GRAPH_PAD, .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - GRAPH_HEIGHT};
+    SA_GraphicsRectangle graphics_rectangle_avg_ratings = {
+        .height = GRAPH_HEIGHT,
+        .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD,
+        .top_left_corner_x = LIST_WIDTH + GRAPH_PAD,
+        .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - 2 * GRAPH_HEIGHT - 2 * GRAPH_PAD
+    };
+    SA_GraphicsRectangle graphics_rectangle_ratings_count = {
+        .height = GRAPH_HEIGHT,
+        .width = WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD,
+        .top_left_corner_x = LIST_WIDTH + GRAPH_PAD,
+        .top_left_corner_y = WINDOW_HEIGHT - GRAPH_PAD - GRAPH_HEIGHT
+    };
     
     double years[NUMBER_OF_YEARS_LOGGED_IN_STATS] = {0};
     double ratings[NUMBER_OF_YEARS_LOGGED_IN_STATS];
@@ -97,23 +101,23 @@ void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_off
     }
 
      // Clear main area
-    SA_graphics_vram_draw_rectangle(window, LIST_WIDTH + 1, HEADER_HEIGHT, WINDOW_WIDTH - LIST_WIDTH - 1, WINDOW_HEIGHT - HEADER_HEIGHT, WINDOW_BACKGROUND);
+    SA_graphics_vram_draw_rectangle(function_arguments->window, LIST_WIDTH + 1, HEADER_HEIGHT, WINDOW_WIDTH - LIST_WIDTH - 1, WINDOW_HEIGHT - HEADER_HEIGHT, WINDOW_BACKGROUND);
 
     // Main area title (movie name)
-    SA_graphics_vram_draw_text(window, ((WINDOW_WIDTH + LIST_WIDTH) / 2 - SA_strlen(info->name) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 20, info->name, WINDOW_FOREGROUND);
+    SA_graphics_vram_draw_text(function_arguments->window, ((WINDOW_WIDTH + LIST_WIDTH) / 2 - SA_strlen(info->name) * FONT_WIDTH) / 2 + LIST_WIDTH, HEADER_HEIGHT + 20, info->name, WINDOW_FOREGROUND);
 
-    draw_summary(window, ratings_sum / years_of_ratings_count, ratings_total_count, fstats->film_id);
+    draw_summary(function_arguments->window, ratings_sum / years_of_ratings_count, ratings_total_count, fstats->film_id);
 
     // First graph
-    SA_graphics_plot_continuous_graph(window, years, ratings, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_avg_ratings, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
+    SA_graphics_plot_continuous_graph(function_arguments->window, years, ratings, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_avg_ratings, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
     // Second graph
-    SA_graphics_plot_continuous_graph(window, years, ratings_count, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_ratings_count, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
+    SA_graphics_plot_continuous_graph(function_arguments->window, years, ratings_count, NUMBER_OF_YEARS_LOGGED_IN_STATS, &graphics_rectangle_ratings_count, 0x0, GRAPH_PLOT_COLOR, WINDOW_BACKGROUND);
 
     // First graph title
-    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(GRAPH1_LABEL)) / 2 + LIST_WIDTH, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 20, GRAPH1_LABEL, WINDOW_FOREGROUND);
+    SA_graphics_vram_draw_text(function_arguments->window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(GRAPH1_LABEL)) / 2 + LIST_WIDTH, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 20, GRAPH1_LABEL, WINDOW_FOREGROUND);
     // Second graph title
-    SA_graphics_vram_draw_text(window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(GRAPH2_LABEL)) / 2 + LIST_WIDTH, graphics_rectangle_ratings_count.top_left_corner_y + graphics_rectangle_ratings_count.height + 20, GRAPH2_LABEL, WINDOW_FOREGROUND);
+    SA_graphics_vram_draw_text(function_arguments->window, (WINDOW_WIDTH - LIST_WIDTH - 2 * GRAPH_PAD - SA_strlen(GRAPH2_LABEL)) / 2 + LIST_WIDTH, graphics_rectangle_ratings_count.top_left_corner_y + graphics_rectangle_ratings_count.height + 20, GRAPH2_LABEL, WINDOW_FOREGROUND);
     
 
-    SA_graphics_vram_draw_horizontal_line(window, LIST_WIDTH + GRAPH_PAD, WINDOW_WIDTH - GRAPH_PAD, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 30, WINDOW_FOREGROUND_ALTERNATE, 1); // Separator
+    SA_graphics_vram_draw_horizontal_line(function_arguments->window, LIST_WIDTH + GRAPH_PAD, WINDOW_WIDTH - GRAPH_PAD, graphics_rectangle_avg_ratings.top_left_corner_y + graphics_rectangle_avg_ratings.height + 30, WINDOW_FOREGROUND_ALTERNATE, 1); // Separator
 }

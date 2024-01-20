@@ -54,13 +54,31 @@ typedef struct _elevator_properties {
     int position_y;
 } ElevatorProperties;
 
+typedef struct _function_arguments {
+    SA_GraphicsWindow* window;
+    SA_GraphicsEvent* event;
+    SA_EventMouse* cursor_properties;
+    SA_GraphicsTextInput* text_input;
+    SA_bool* query_has_results;
+    SA_bool* search_bar_highlight;
+    SA_bool* elevator_mouse_down;
+    SA_bool* display_query;
+    ElevatorProperties* elevator_properties;
+    int* pixel_offset;
+    int* selected_index;
+    const char* text_input_string;
+    SA_DynamicArray* films_stats;
+    SA_DynamicArray* films_infos;
+    SA_DynamicArray** film_stats_filtered;
+} FunctionArguments;
+
 
 void draw_star(SA_GraphicsWindow* window, double x, double y, float percent_filling);
 
-void draw_movie_info(SA_GraphicsWindow* window, uint32_t mouse_y, int* pixel_offset, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered);
+void draw_movie_info(FunctionArguments* function_arguments, uint32_t mouse_y);
 
 void redraw_elevator(SA_GraphicsWindow* window, ElevatorProperties* elevator_properties);
-void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered);
-void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int direction, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered);
+void draw_movie_list_from_percentage_offset(FunctionArguments* function_arguments, double percentage);
+void draw_movie_list_from_relative_pixel_offset(FunctionArguments* function_arguments, int direction);
 
 #endif

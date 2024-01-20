@@ -30,23 +30,16 @@ void redraw_elevator(SA_GraphicsWindow* window, ElevatorProperties* elevator_pro
 }
 
 /// @brief Draw the movie list from a percentage of scrolling
-/// @param window Which window to draw the list in
+/// @param function_arguments Structure of various arguments
 /// @param percentage Percentage of scroll in the list
-/// @param pixel_offset Pixel offset in the list to store current scroll position
-/// @param elevator_properties Pointer to properties of the scrollbar
-/// @param films_infos Array of structures containing the title and release year for every movie
-/// @param films_stats Array of structures containing stats about every movie
-/// @param selected_index Index of the selected movie from the list
-/// @param display_query If the list should show all items or only a search
-/// @param film_stats_filtered Filtered list of film stats
-void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double percentage, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
+void draw_movie_list_from_percentage_offset(FunctionArguments* function_arguments, double percentage)
 {
-    SA_DynamicArray* film_stats_to_use = (*display_query == SA_TRUE) ? film_stats_filtered : films_stats;
+    SA_DynamicArray* film_stats_to_use = (*(function_arguments->display_query) == SA_TRUE) ? *(function_arguments->film_stats_filtered) : function_arguments->films_stats;
 
     int movie_count = SA_dynarray_size(film_stats_to_use);
     int list_height = (movie_count * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
 
-    if (*selected_index >= movie_count)
+    if (*(function_arguments->selected_index) >= movie_count)
     {
         return; // Can't click on an empty element
     }
@@ -60,19 +53,19 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
         percentage = 1.0;
     }
 
-    *pixel_offset = round(list_height * percentage); // Where we are in the list
+    *(function_arguments->pixel_offset) = round(list_height * percentage); // Where we are in the list
 
     if (list_height <= 0)
     {
-        *pixel_offset = 0;
+        *(function_arguments->pixel_offset) = 0;
     }
 
-    int element = *pixel_offset / LIST_ENTRY_HEIGHT; // Which element is the first partially visible
+    int element = *(function_arguments->pixel_offset) / LIST_ENTRY_HEIGHT; // Which element is the first partially visible
 
     // Clear elevator track
-    SA_graphics_vram_draw_rectangle(window, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, ELEVATOR_WIDTH, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR);
+    SA_graphics_vram_draw_rectangle(function_arguments->window, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, ELEVATOR_WIDTH, WINDOW_HEIGHT, ELEVATOR_TRAIL_COLOR);
     // Clear list
-    SA_graphics_vram_draw_rectangle(window, 0, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, LIST_WIDTH - ELEVATOR_WIDTH, WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT, WINDOW_BACKGROUND);
+    SA_graphics_vram_draw_rectangle(function_arguments->window, 0, HEADER_HEIGHT + SEARCH_BAR_HEIGHT, LIST_WIDTH - ELEVATOR_WIDTH, WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT, WINDOW_BACKGROUND);
     
     char text_limited[(LIST_WIDTH - ELEVATOR_WIDTH - TITLE_PADDING_X) / FONT_WIDTH] = {0};
     char year[5] = {0};
@@ -83,29 +76,29 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
     {
         if(((element+i) & 0x1) == 0)
         {
-            color_row(window, i, *pixel_offset, WINDOW_BACKGROUND_ALTERNATE);
+            color_row(function_arguments->window, i, *(function_arguments->pixel_offset), WINDOW_BACKGROUND_ALTERNATE);
         }
 
         uint32_t fg_color_alt = WINDOW_FOREGROUND_ALTERNATE;
         uint32_t fg_color = WINDOW_FOREGROUND;
 
-        if (element + i == *selected_index)
+        if (element + i == *(function_arguments->selected_index))
         {
-            color_row(window, i, *pixel_offset, WINDOW_BACKGROUND_SELECTED);
+            color_row(function_arguments->window, i, *(function_arguments->pixel_offset), WINDOW_BACKGROUND_SELECTED);
             fg_color = fg_color_alt = WINDOW_FOREGROUND_SELECTED;
         }
 
         // List separator
-        SA_graphics_vram_draw_horizontal_line(window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, WINDOW_FOREGROUND, 1);
+        SA_graphics_vram_draw_horizontal_line(function_arguments->window, 0, LIST_WIDTH - ELEVATOR_WIDTH, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + (i + 1) * LIST_ENTRY_HEIGHT - (*(function_arguments->pixel_offset) + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT, WINDOW_FOREGROUND, 1);
 
-        if (i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 25 <= 0) // Don't display text if it will be hidden by the header
+        if (i * LIST_ENTRY_HEIGHT - (*(function_arguments->pixel_offset) + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 25 <= 0) // Don't display text if it will be hidden by the header
         {
             continue;
         }
 
         // Get film text and year and display them
         FilmStats* fstats = _SA_dynarray_get_element_ptr(film_stats_to_use, element + i);
-        FilmInfo* info = _SA_dynarray_get_element_ptr(films_infos, fstats->film_id);
+        FilmInfo* info = _SA_dynarray_get_element_ptr(function_arguments->films_infos, fstats->film_id);
 
         if(SA_strncpy(text_limited, info->name, sizeof(text_limited)-3) == sizeof(text_limited)-4)
         {
@@ -113,51 +106,44 @@ void draw_movie_list_from_percentage_offset(SA_GraphicsWindow *window, double pe
         }
 
         SA_uint64_to_str(year, info->year);
-        SA_graphics_vram_draw_text(window, TITLE_PADDING_X, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 35, text_limited, fg_color);
-        SA_graphics_vram_draw_text(window, DATE_PADDING_X, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*pixel_offset + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 60, year, fg_color_alt);
+        SA_graphics_vram_draw_text(function_arguments->window, TITLE_PADDING_X, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*(function_arguments->pixel_offset) + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 35, text_limited, fg_color);
+        SA_graphics_vram_draw_text(function_arguments->window, DATE_PADDING_X, HEADER_HEIGHT + SEARCH_BAR_HEIGHT + i * LIST_ENTRY_HEIGHT - (*(function_arguments->pixel_offset) + LIST_ENTRY_HEIGHT) % LIST_ENTRY_HEIGHT + 60, year, fg_color_alt);
     }
 
-    elevator_properties->position_y = percentage * (WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT) + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
-    redraw_elevator(window, elevator_properties);
+    function_arguments->elevator_properties->position_y = percentage * (WINDOW_HEIGHT - HEADER_HEIGHT - SEARCH_BAR_HEIGHT - ELEVATOR_HEIGHT) + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
+    redraw_elevator(function_arguments->window, function_arguments->elevator_properties);
 }
 
 /// @brief Draw the movie list from a pixel offset of scrolling
-/// @param window Which window to draw the list in
+/// @param function_arguments Structure of various arguments
 /// @param direction Number of pixels to scroll (negative to go up)
-/// @param pixel_offset Pixel offset in the list to store current scroll position
-/// @param elevator_properties Pointer to properties of the scrollbar
-/// @param films_infos Array of structures containing the title and release year for every movie
-/// @param films_stats Array of structures containing stats about every movie
-/// @param selected_index Index of the selected movie from the list
-/// @param display_query If the list should show all items or only a search
-/// @param film_stats_filtered Filtered list of film stats
-void draw_movie_list_from_relative_pixel_offset(SA_GraphicsWindow* window, int direction, int* pixel_offset, ElevatorProperties* elevator_properties, SA_DynamicArray* films_infos, SA_DynamicArray* films_stats, int* selected_index, SA_bool* display_query, SA_DynamicArray* film_stats_filtered)
+void draw_movie_list_from_relative_pixel_offset(FunctionArguments* function_arguments, int direction)
 {
-    SA_DynamicArray* film_stats_to_use = *display_query == SA_TRUE ? film_stats_filtered : films_stats;
+    SA_DynamicArray* film_stats_to_use = *(function_arguments->display_query) == SA_TRUE ? *(function_arguments->film_stats_filtered) : function_arguments->films_stats;
     int movie_count = SA_dynarray_size(film_stats_to_use);
     int list_height = (movie_count * LIST_ENTRY_HEIGHT) - WINDOW_HEIGHT + HEADER_HEIGHT + SEARCH_BAR_HEIGHT;
 
     if (list_height <= 0)
     {
-        *pixel_offset = 0;
+        *(function_arguments->pixel_offset) = 0;
     }
 
     // Compute percentage based on the position in the list
-    if (*pixel_offset + direction < 0)
+    if (*(function_arguments->pixel_offset) + direction < 0)
     {
-        *pixel_offset = 0;
-        double percentage = (double) *pixel_offset / list_height;
-        draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
+        *(function_arguments->pixel_offset) = 0;
+        double percentage = (double) *(function_arguments->pixel_offset) / list_height;
+        draw_movie_list_from_percentage_offset(function_arguments, percentage);
         return;
     }
-    if (*pixel_offset + direction > list_height)
+    if (*(function_arguments->pixel_offset) + direction > list_height)
     {
-        *pixel_offset = list_height;
-        double percentage = (double) *pixel_offset / list_height;
-        draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
+        *(function_arguments->pixel_offset) = list_height;
+        double percentage = (double) *(function_arguments->pixel_offset) / list_height;
+        draw_movie_list_from_percentage_offset(function_arguments, percentage);
         return;
     }
-    *pixel_offset += direction;
-    double percentage = (double) *pixel_offset / list_height;
-    draw_movie_list_from_percentage_offset(window, percentage, pixel_offset, elevator_properties, films_infos, films_stats, selected_index, display_query, film_stats_filtered);
+    *(function_arguments->pixel_offset) += direction;
+    double percentage = (double) *(function_arguments->pixel_offset) / list_height;
+    draw_movie_list_from_percentage_offset(function_arguments, percentage);
 }
