@@ -4,15 +4,11 @@
 #include <SA/memory/mem_alloc.h>
 #include <stdio.h>
 
-/*
-Macéo named his creation like this, don't change it, it's like his child.
-*/
-
 /// @brief Check if a user_id belongs to an array of user_ids
 /// @param user_ids The array to check
 /// @param user_id The value to find
 /// @return SA_TRUE if user_id is in user_ids, else SA_FALSE
-static SA_bool cdegdechggfe(SA_DynamicArray* user_ids, uint32_t user_id)
+static SA_bool is_user_id_in_array(SA_DynamicArray* user_ids, uint32_t user_id)
 {
     uint64_t length = SA_dynarray_size(user_ids);
     uint32_t* elts = _SA_dynarray_get_element_ptr(user_ids, 0);
@@ -38,7 +34,7 @@ static void filter_user_ids(Film* film_filtered, const Film* film_to_filter, SA_
     for (uint32_t i = 0; i < rating_count; i++)
     {
         Rating rating = SA_dynarray_get(Rating, film_to_filter->ratings, i);
-        SA_bool isinreviews = cdegdechggfe(user_ids, rating.user_id);
+        SA_bool isinreviews = is_user_id_in_array(user_ids, rating.user_id);
         if (whitelist_mode && isinreviews)
         {
             film_filtered->rating_count++;

@@ -30,7 +30,7 @@ static inline double get_star_size()
 /// @param nb_vertices Number of vertices (length of both x and y)
 /// @param color Fill color
 /// @param max_x Number of pixel columns to fill inside the polygon
-void fill_polygon_before_max_x(SA_GraphicsWindow* window, const int *x, const int *y, int nb_vertices, uint32_t color, int max_x)
+static void fill_polygon_before_max_x(SA_GraphicsWindow* window, const int *x, const int *y, int nb_vertices, uint32_t color, int max_x)
 {
     if(nb_vertices < 3)
         return;
@@ -103,7 +103,7 @@ void fill_polygon_before_max_x(SA_GraphicsWindow* window, const int *x, const in
 /// @param y Vertical position of the line, will be modified to be the end of the line after execution
 /// @param size Length of the line
 /// @param angle Angle of the line (0 means to the right, reversed as our y axis is inverted)
-void draw_vec(SA_GraphicsWindow* window, double* x, double* y, double size, double angle)
+static void draw_vec(SA_GraphicsWindow* window, double* x, double* y, double size, double angle)
 {
     double old_x = *x;
     double old_y = *y;

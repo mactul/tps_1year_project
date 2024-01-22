@@ -18,7 +18,7 @@ static char movie_title_file_path[256];
 /// @param substring Search pattern
 /// @param film_stats_filtered Destination (filtered) array of FilmStats
 /// @return SA_FALSE if no film titles matches, SA_TRUE if there is at least one match
-SA_bool movie_search(SA_DynamicArray* film_infos, SA_DynamicArray* film_stats, const char* substring, SA_DynamicArray** film_stats_filtered)
+static SA_bool movie_search(SA_DynamicArray* film_infos, SA_DynamicArray* film_stats, const char* substring, SA_DynamicArray** film_stats_filtered)
 {
     SA_dynarray_free(film_stats_filtered);
     *film_stats_filtered = SA_dynarray_create(FilmStats);
@@ -42,7 +42,7 @@ SA_bool movie_search(SA_DynamicArray* film_infos, SA_DynamicArray* film_stats, c
 /// @brief Draw a highlight around the search bar inside a window
 /// @param window The window to draw in
 /// @param do_highlight If the highlight should be visible or "hidden"
-void search_bar_highlight_redraw(SA_GraphicsWindow* window, SA_bool do_highlight)
+static void search_bar_highlight_redraw(SA_GraphicsWindow* window, SA_bool do_highlight)
 {
     uint32_t outline_color = do_highlight == SA_TRUE ? WINDOW_BACKGROUND_SELECTED : SEARCH_BG_COLOR;
     SA_graphics_vram_draw_hollow_rectangle(window, 0, HEADER_HEIGHT, LIST_WIDTH - 1, SEARCH_BAR_HEIGHT - 1, outline_color, 1);
@@ -50,7 +50,7 @@ void search_bar_highlight_redraw(SA_GraphicsWindow* window, SA_bool do_highlight
 
 /// @brief Handle a click inside a graphical window
 /// @param function_arguments Structure pointer of various arguments
-void event_handler_mouse_down(FunctionArguments* function_arguments)
+static void event_handler_mouse_down(FunctionArguments* function_arguments)
 {
     if (!*(function_arguments->query_has_results))
     {
@@ -83,7 +83,7 @@ void event_handler_mouse_down(FunctionArguments* function_arguments)
 
 /// @brief Handle a click inside a graphical window
 /// @param function_arguments Structure pointer of various arguments
-void event_handler_key_down(FunctionArguments* function_arguments)
+static void event_handler_key_down(FunctionArguments* function_arguments)
 {
     SA_DynamicArray* film_stats_to_count = *(function_arguments->display_query) ? *(function_arguments->film_stats_filtered) : function_arguments->films_stats;
     if (!*(function_arguments->search_bar_highlight))
@@ -127,7 +127,7 @@ void event_handler_key_down(FunctionArguments* function_arguments)
 
 /// @brief Draw the loading screen inside a graphical window
 /// @param window The window to draw in
-void draw_waiting_screen(SA_GraphicsWindow* window)
+static void draw_waiting_screen(SA_GraphicsWindow* window)
 {
     // Waiting screen, this should not even display as reading stats.bin is almost instantaneous
     SA_graphics_vram_draw_rectangle(window, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND);
@@ -139,7 +139,7 @@ void draw_waiting_screen(SA_GraphicsWindow* window)
 
 /// @brief Draw everything needed from the initial view in a graphical window
 /// @param function_arguments Structure of various arguments
-void draw_initial_view(FunctionArguments* function_arguments)
+static void draw_initial_view(FunctionArguments* function_arguments)
 {
     // Clear screen again
     SA_graphics_vram_draw_rectangle(function_arguments->window, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BACKGROUND);
@@ -164,7 +164,7 @@ void draw_initial_view(FunctionArguments* function_arguments)
 
 /// @brief Function to handle all events
 /// @param function_arguments Structure of various arguments
-void event_dispatcher(FunctionArguments* function_arguments)
+static void event_dispatcher(FunctionArguments* function_arguments)
 {
     switch(function_arguments->event->event_type)
     {
@@ -238,7 +238,7 @@ void event_dispatcher(FunctionArguments* function_arguments)
 
 /// @brief This function receives all the events linked to a window
 /// @param window The window that produced the event
-void draw_callback(SA_GraphicsWindow *window)
+static void draw_callback(SA_GraphicsWindow *window)
 {
     draw_waiting_screen(window);
 

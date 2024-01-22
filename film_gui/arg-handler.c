@@ -4,7 +4,7 @@
 #include "arg-handler.h"
 
 /// @brief Print command-line options of this program
-void print_usage()
+static void print_usage()
 {
     puts(
         "film_gui, version 0.0.1, Macéo TULOUP & Valentin FOULON\n"

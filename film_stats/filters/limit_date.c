@@ -7,7 +7,7 @@
 /// @param month A month (0-11)
 /// @param day A day (0-31)
 /// @return -1 if the rating's date is older, 1 if it is newer, 0 if the dates are equal
-int8_t compare_rating_date(Rating r, uint8_t offsetted_year, uint8_t month, uint8_t day)
+static int8_t compare_rating_date(Rating r, uint8_t offsetted_year, uint8_t month, uint8_t day)
 {
     if (r.offseted_year < offsetted_year)
     {
