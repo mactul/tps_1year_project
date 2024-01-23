@@ -5,6 +5,9 @@
 #include "src/dataset_io/parser_txt.h"
 #include <SA/SA.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 
 static GuiArguments _args_structure;
@@ -340,6 +343,7 @@ static void draw_callback(SA_GraphicsWindow *window)
 /// * RETURN_CODE_ERROR_ARGUMENTS if command line arguments are incorrect
 int main(int argc, char* argv[])
 {
+    const char* film_stats_executable = "./bin/film_stats";
     _return_code = RETURN_CODE_OK;
     int remaining_index;
     SA_init();
@@ -348,8 +352,24 @@ int main(int argc, char* argv[])
         _return_code = RETURN_CODE_ERROR_ARGUMENTS;
         goto EXIT_LBL;
     }
-    SA_strncpy(movie_title_file_path, argv[remaining_index], 256);
-    SA_graphics_create_window("Statistiques", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, draw_callback, SA_GRAPHICS_QUEUE_EVERYTHING, NULL);
+
+    pid_t p = fork();
+    if (p == 0)
+    {
+        // Child process, start film_stats with required command line argument
+        if (execl(film_stats_executable, film_stats_executable, "-p", NULL) == -1)
+        {
+            printf("Could not start film_stats\n");
+            _return_code = RETURN_CODE_ERROR_FILE;
+            goto EXIT_LBL;
+        }
+    }
+    else
+    {
+        // Parent process, start normally
+        SA_strncpy(movie_title_file_path, argv[remaining_index], 256);
+        SA_graphics_create_window("Statistiques", 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, draw_callback, SA_GRAPHICS_QUEUE_EVERYTHING, NULL);
+    }
 
 EXIT_LBL:
     SA_destroy();

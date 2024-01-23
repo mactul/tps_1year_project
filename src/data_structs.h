@@ -43,6 +43,7 @@ typedef struct _rating {
 
 typedef struct _stats_arguments {
     int32_t min_reviews;
+    SA_bool use_pipe;
     const char* liked_films_filepath;
     const char* limit;
     const char* only_reviewers;

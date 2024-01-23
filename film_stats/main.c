@@ -10,6 +10,9 @@
 #include "src/recommendation/recommendation.h"
 #include "src/signal_handler.h"
 #include "src/data_structs.h"
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 #define MAX_FILENAME_SIZE 256
 
@@ -66,6 +69,9 @@ FREE:
 /// * RETURN_CODE_SIGNAL_ABORT if the user cancelled the program
 int main(int argc, char* argv[])
 {
+    int server_socket = 0;
+    int client_socket = 0;
+
     signal(SIGINT, sigint_handler);
 
     int exit_code = RETURN_CODE_OK;
@@ -106,6 +112,13 @@ int main(int argc, char* argv[])
     }
     fclose(file);
     file = NULL;
+
+    if (args_structure.use_pipe == SA_TRUE)
+    {
+        // Execution was started using film_gui
+        // Handle this
+        goto EXIT_LBL;
+    }
 
     exit_code = create_stats(films, reviewers, &args_structure);
 

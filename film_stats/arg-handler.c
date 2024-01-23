@@ -17,7 +17,8 @@ static void print_usage()
         "-b \"X, Y\"\t\t\tNot taking into account the opinions of reviewers X, Y\n"
         "-e MIN\t\t\t\tOnly take into account reviews from reviewers who have seen more than MIN films\n"
         "-r LIKED_FILMS_TEXT_FILE_PATH\tMake recommendations with a file containing the list of film IDs you like\n"
-        "-i IN_DATA_BIN_FILE_PATH\tAlternative data binary file path"
+        "-i IN_DATA_BIN_FILE_PATH\tAlternative data binary file path\n"
+        "-p\t\t\t\tStart a pipe (for use in real-time with film_gui)"
     );
 }
 
@@ -36,10 +37,11 @@ bool parse_args(int argc, char* argv[], StatsArguments* args_structure, int* arg
     args_structure->out_file_path = DEFAULT_FILMS_STATS_FILE;
     args_structure->liked_films_filepath = NULL;
     args_structure->in_file_path = DEFAULT_FILMS_DATA_FILE;
+    args_structure->use_pipe = SA_FALSE;
 
     int c;
     opterr = 0;
-    while ((c = getopt(argc, argv, "o:l:c:b:e:r:i:h")) != -1)
+    while ((c = getopt(argc, argv, "o:l:c:b:e:r:i:ph")) != -1)
     {
         switch(c)
         {
@@ -69,6 +71,9 @@ bool parse_args(int argc, char* argv[], StatsArguments* args_structure, int* arg
                 break;
             case 'i':
                 args_structure->in_file_path = optarg;
+                break;
+            case 'p':
+                args_structure->use_pipe = SA_TRUE;
                 break;
             case 'h':
                 print_usage();
